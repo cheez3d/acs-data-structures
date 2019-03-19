@@ -1,5 +1,5 @@
 CC := gcc
-CFLAGS := -Wall -D_DEFAULT_SOURCE -D_GNU_SOURCE -std=c11
+CFLAGS := -Wall -g
 
 ifeq ($(shell which node),)
 	$(error node missing)
@@ -14,7 +14,7 @@ OBJ_DIR := obj
 
 $(shell mkdir -p $(INC_DIR) $(SRC_DIR) $(OBJ_DIR))
 
-BIN := list
+BIN := main
 SRC := $(wildcard $(SRC_DIR)/*.c) $(BIN).c
 OBJ := $(subst $(BIN).o,$(OBJ_DIR)/$(BIN).o,$(subst $(SRC_DIR)/,$(OBJ_DIR)/,$(SRC:%.c=%.o)))
 DEP := $(OBJ:%.o=%.d)
@@ -36,9 +36,9 @@ $(BIN): $(OBJ)
 -include $(DEP)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c Makefile $(VSCODE)
-	$(CC) -I$(INC_DIR) -MMD -c $(STANDARD:%=-std=%) $(CFLAGS) $(DEFINES:%=-D%) $< -o $@
+	$(CC) -I$(INC_DIR) -I$(SRC_DIR) -MMD -c $(STANDARD:%=-std=%) $(CFLAGS) $(DEFINES:%=-D%) $< -o $@
 $(OBJ_DIR)/$(BIN).o: $(BIN).c Makefile $(VSCODE)
-	$(CC) -I$(INC_DIR) -MMD -c $(STANDARD:%=-std=%) $(CFLAGS) $(DEFINES:%=-D%) $< -o $@
+	$(CC) -I$(INC_DIR) -I$(SRC_DIR) -MMD -c $(STANDARD:%=-std=%) $(CFLAGS) $(DEFINES:%=-D%) $< -o $@
 
 
 .PHONY: run
@@ -50,10 +50,10 @@ clean:
 	@-rm -f $(OBJ) $(DEP) $(BIN)
 
 
-# .PHONY: debug
-# debug:
-# 	$(eval CFLAGS += -g)
+.PHONY: debug
+debug:
+	$(eval CFLAGS += -g)
 
-# .PHONY: valgrind
-# valgrind: debug build
-# 	@valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(BIN)
+.PHONY: valgrind
+valgrind: debug build
+	@valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(BIN)
