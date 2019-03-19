@@ -13,11 +13,14 @@ info variables - print all global and static variables
 info locals - print local variables of current stack frame
 info args - print arguments of the current stack frame
 
+break - add breakpoint
+clear - clear breakpoints
+delete - delete breakpoint by number
 
 next - step over
 step - step into
 finish - continue until return
-
+kill - kill running program
 
 
 TODO in future: TRY GDB DASHBOARD

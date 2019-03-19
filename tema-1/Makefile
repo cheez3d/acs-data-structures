@@ -1,12 +1,9 @@
 CC := gcc
 CFLAGS := -Wall -g
+# TODO: fix valgrind recipe problem need to recompile with -g flag
 
-ifeq ($(shell which node),)
-	$(error node missing)
-endif
-VSCODE := .vscode/c_cpp_properties.json
-STANDARD := c99 # $(shell node -p "require('./$(VSCODE)').configurations[0].cStandard")
-DEFINES :=  # $(shell node -p "require('./$(VSCODE)').configurations[0].defines.join(' ')")
+STANDARD := c99
+DEFINES := 
 
 INC_DIR := include
 SRC_DIR := src
@@ -15,31 +12,24 @@ OBJ_DIR := obj
 $(shell mkdir -p $(INC_DIR) $(SRC_DIR) $(OBJ_DIR))
 
 BIN := main
-SRC := $(wildcard $(SRC_DIR)/*.c) $(BIN).c
-OBJ := $(subst $(BIN).o,$(OBJ_DIR)/$(BIN).o,$(subst $(SRC_DIR)/,$(OBJ_DIR)/,$(SRC:%.c=%.o)))
+SRC := $(wildcard $(SRC_DIR)/*.c)
+OBJ := $(subst $(SRC_DIR)/,$(OBJ_DIR)/,$(SRC:%.c=%.o))
 DEP := $(OBJ:%.o=%.d)
-
 
 .PHONY: print-%
 print-%:
 	@echo $*=$($*)
 
-
 .DEFAULT_GOAL := build
 build: $(BIN)
 
-
 $(BIN): $(OBJ)
-	$(CC) $(CFLAGS) $^ -o $(BIN)
-
+	$(CC) $(CFLAGS) $^ -lm -o $(BIN)
 
 -include $(DEP)
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c Makefile $(VSCODE)
-	$(CC) -I$(INC_DIR) -I$(SRC_DIR) -MMD -c $(STANDARD:%=-std=%) $(CFLAGS) $(DEFINES:%=-D%) $< -o $@
-$(OBJ_DIR)/$(BIN).o: $(BIN).c Makefile $(VSCODE)
-	$(CC) -I$(INC_DIR) -I$(SRC_DIR) -MMD -c $(STANDARD:%=-std=%) $(CFLAGS) $(DEFINES:%=-D%) $< -o $@
-
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c Makefile
+	$(CC) -I$(INC_DIR) -MMD -c $(STANDARD:%=-std=%) $(CFLAGS) $(DEFINES:%=-D%) $< -o $@
 
 .PHONY: run
 run: build
@@ -48,7 +38,6 @@ run: build
 .PHONY: clean
 clean:
 	@-rm -f $(OBJ) $(DEP) $(BIN)
-
 
 .PHONY: debug
 debug:

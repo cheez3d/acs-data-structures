@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
+#include <stddef.h>
 
 struct LinkedListData {
     void *mem;
@@ -8,10 +9,7 @@ struct LinkedListData {
 };
 
 struct LinkedListNode {
-    void *data;
-    size_t size;
-    
-    // struct LinkedListData *data;
+    struct LinkedListData *data;
     
     struct LinkedListNode *next;
     struct LinkedListNode *prev;
@@ -24,24 +22,22 @@ struct LinkedList {
     struct LinkedListNode *tail;
 };
 
-typedef int (*LinkedList_comp_func_t)(const void *first, const void *second);
-typedef void (*LinkedList_print_func_t)(const void *data);
+typedef int (*LinkedList_comp_func_t)(const struct LinkedListData *first, const struct LinkedListData *second);
+typedef void (*LinkedList_print_func_t)(const struct LinkedListData *data);
+
+// LinkedListData functions
+
+size_t LinkedListData_GetSize(const struct LinkedListData *linkedListData);
+
+void LinkedListData_Destroy(struct LinkedListData *linkedListData);
 
 // LinkedListNode functions
 
-void * LinkedListNode_CreateData(const void *data, size_t size);
-
-void LinkedListNode_DestroyData(void *data);
-
-// struct LinkedListNode * LinkedListNode_Create(const void *data, size_t size);
-
-void * LinkedListNode_GetData(const struct LinkedListNode *linkedListNode);
+struct LinkedListData * LinkedListNode_GetData(const struct LinkedListNode *linkedListNode);
 
 struct LinkedListNode * LinkedListNode_GetNext(const struct LinkedListNode *linkedListNode);
 
 struct LinkedListNode * LinkedListNode_GetPrev(const struct LinkedListNode *linkedListNode);
-
-// void LinkedListNode_Destroy(struct LinkedListNode *linkedListNode);
 
 // LinkedList functions
 
@@ -51,92 +47,108 @@ size_t LinkedList_GetSize(const struct LinkedList *linkedList);
 
 bool LinkedList_IsEmpty(const struct LinkedList *linkedList);
 
-struct LinkedListNode * LinkedList_GetBegin(const struct LinkedList *linkedList);
+struct LinkedListNode * LinkedList_GetFirst(const struct LinkedList *linkedList);
 
-struct LinkedListNode * LinkedList_GetEnd(const struct LinkedList *linkedList);
+struct LinkedListNode * LinkedList_GetLast(const struct LinkedList *linkedList);
 
-struct LinkedListNode * LinkedList_ContainsNode(
+struct LinkedListNode * LinkedList_Contains(
     const struct LinkedList *linkedList,
     const struct LinkedListNode *linkedListNode
 );
 
 struct LinkedListNode * LinkedList_ContainsData(
     const struct LinkedList *linkedList,
-    const void *data,
+    const struct LinkedListData *linkedListData,
     LinkedList_comp_func_t LinkedList_comp_func
 );
 
-struct LinkedListNode * LinkedList_AddNodeBetween(
+struct LinkedListNode * LinkedList_AddBetween(
     struct LinkedList *linkedList,
-    struct LinkedListNode *linkedListNode,
+    const struct LinkedListNode *linkedListNode,
     struct LinkedListNode *linkedListLeft,
     struct LinkedListNode *linkedListRight
 );
 
-struct LinkedListNode * LinkedList_AddNodeAfter(
+struct LinkedListNode * LinkedList_AddAfter(
     struct LinkedList *linkedList,
-    struct LinkedListNode *linkedListNode,
+    const struct LinkedListNode *linkedListNode,
     struct LinkedListNode *linkedListRef
 );
 
-struct LinkedListNode * LinkedList_AddNodeBefore(
+struct LinkedListNode * LinkedList_AddBefore(
     struct LinkedList *linkedList,
-    struct LinkedListNode *linkedListNode,
+    const struct LinkedListNode *linkedListNode,
     struct LinkedListNode *linkedListRef
 );
 
-struct LinkedListNode * LinkedList_AddNodeBegin(
+struct LinkedListNode * LinkedList_AddFirst(
     struct LinkedList *linkedList,
-    struct LinkedListNode *linkedListNode
+    const struct LinkedListNode *linkedListNode
 );
 
-struct LinkedListNode * LinkedList_AddNodeEnd(
+struct LinkedListNode * LinkedList_AddLast(
     struct LinkedList *linkedList,
-    struct LinkedListNode *linkedListNode
+    const struct LinkedListNode *linkedListNode
 );
 
 struct LinkedListNode * LinkedList_AddDataBetween(
     struct LinkedList *linkedList,
-    const void *data, size_t size,
+    const struct LinkedListData *linkedListData,
     struct LinkedListNode *linkedListLeft,
     struct LinkedListNode *linkedListRight
 );
 
 struct LinkedListNode * LinkedList_AddDataAfter(
     struct LinkedList *linkedList,
-    const void *data, size_t size,
+    const struct LinkedListData *linkedListData,
     struct LinkedListNode *linkedListRef
 );
 
 struct LinkedListNode * LinkedList_AddDataBefore(
     struct LinkedList *linkedList,
-    const void *data, size_t size,
+    const struct LinkedListData *linkedListData,
     struct LinkedListNode *linkedListRef
 );
 
-struct LinkedListNode * LinkedList_AddDataBegin(
+struct LinkedListNode * LinkedList_AddDataFirst(
     struct LinkedList *linkedList,
-    const void *data, size_t size
+    const struct LinkedListData *linkedListData
 );
 
-struct LinkedListNode * LinkedList_AddDataEnd(
+struct LinkedListNode * LinkedList_AddDataLast(
     struct LinkedList *linkedList,
-    const void *data, size_t size
+    const struct LinkedListData *linkedListData
 );
 
-void * LinkedList_RemoveNode(
+struct LinkedListData * LinkedList_Remove(
     struct LinkedList *linkedList,
-    struct LinkedListNode *linkedListNode
+    struct LinkedListNode *linkedListNode,
+    bool pop
 );
 
-void * LinkedList_RemoveBegin(struct LinkedList *linkedList);
+struct LinkedListData * LinkedList_RemoveFirst(struct LinkedList *linkedList, bool pop);
 
-void * LinkedList_RemoveEnd(struct LinkedList *linkedList);
+struct LinkedListData * LinkedList_RemoveLast(struct LinkedList *linkedList, bool pop);
 
-void * LinkedList_RemoveData(
+struct LinkedListData * LinkedList_RemoveData(
     struct LinkedList *linkedList,
-    const void *data,
-    LinkedList_comp_func_t LinkedList_comp_func
+    const struct LinkedListData *linkedListData,
+    LinkedList_comp_func_t LinkedList_comp_func,
+    bool pop
+);
+
+struct LinkedList * LinkedList_GetSub(
+    const struct LinkedList *linkedList,
+    const struct LinkedListNode *linkedListLeft,
+    // TODO: remove linkedList prefix from variables and
+    // use private prefix for private variables where necessary
+    const struct LinkedListNode *linkedListRight
+);
+
+struct LinkedList * LinkedList_GetSubCentered(
+    const struct LinkedList *linkedList,
+    const struct LinkedListNode *linkedListNode,
+    size_t radius
 );
 
 void LinkedList_Print(
