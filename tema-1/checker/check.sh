@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+BIN='./tema1'
 
 # e1 - 20
 # e2 - 15
@@ -14,8 +15,8 @@
 #make clean
 #make build
 
-mkdir ./tests/outputs/
-make clean
+mkdir checker/tests/outputs/
+#make clean
 make build
 
 #nr = numar teste
@@ -24,9 +25,9 @@ nr=9
 #stval = val pt bonus
 sigma=250
 
-input_dir="./tests/inputs/"
-output_dir="./tests/outputs/"
-ref_dir="./tests/refs/"
+input_dir="checker/tests/inputs/"
+output_dir="checker/tests/outputs/"
+ref_dir="checker/tests/refs/"
 ZERO=0
 VALGRIND_ARGS="--leak-check=full --error-exitcode=2"
 
@@ -91,7 +92,7 @@ for entry in `seq 0 $nr`; do
 	for i in "${!arr[@]}"; do
 		output_file=$(echo "${output_dir}test${entry}.out.${arr[i]}")
 		ref_file=$(echo "${ref_dir}test${entry}.ref.${arr[i]}")
-		valgrind $VALGRIND_ARGS ./tema1 ${cmm[i]}  < $input_file &> /dev/null
+		valgrind $VALGRIND_ARGS "$BIN" ${cmm[i]}  < $input_file &> /dev/null
        		EXIT_CODE=$?
 		DOI=2
         	if [[ $EXIT_CODE -eq $DOI ]]
@@ -100,7 +101,7 @@ for entry in `seq 0 $nr`; do
         	else
         	        echo "No memory leaks"
         	fi
-	 	./tema1 ${cmm[i]} < $input_file > $output_file
+	 	"$BIN" ${cmm[i]} < $input_file > $output_file
 		toAdd=${p[i]}
 		diff $output_file $ref_file > /dev/null
 		EXIT_CODE=$?
@@ -115,5 +116,4 @@ for entry in `seq 0 $nr`; do
 done
 
 echo "Result = $result"
-rm -r ./tests/outputs/
-
+rm -r checker/tests/outputs/

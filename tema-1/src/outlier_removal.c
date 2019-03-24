@@ -1,70 +1,112 @@
-#include <math.h>
-#include <stdio.h>
-
-#include "LinkedList.h"
+#include "Data.h"
+#include "List.h"
 #include "Point.h"
 
-const size_t K = 5;
+#include <math.h>
 
-float average(const struct LinkedList *pointList) {
-    float avg = 0.f;
-    
-    const struct LinkedListNode *node = LinkedList_GetFirst(pointList);
-    
-    while (node) {
-        const struct Point point = **(const struct Point **)LinkedListNode_GetData(node);
-        
-        avg += point.value;
-        
-        node = LinkedListNode_GetNext(node);
-    }
-    
-    avg /= LinkedList_GetSize(pointList);
-    
-    return avg;
-}
+#define WINDOW_SIZE 5 // 'k' din cerinta
 
-float standard_deviation(const struct LinkedList *pointList, float avg) {
-    float sigma = 0.f;
-    
-    const struct LinkedListNode *node = LinkedList_GetFirst(pointList);
-    
-    while (node) {
-        const struct Point point = **(const struct Point **)LinkedListNode_GetData(node);
-        
-        sigma += (point.value - avg) * (point.value - avg);
-        
-        node = LinkedListNode_GetNext(node);
-    }
-    
-    sigma /= LinkedList_GetSize(pointList);
-    
-    sigma = sqrtf(sigma);
-    
-    return sigma;
-}
+_Static_assert(WINDOW_SIZE > 0, "WINDOW_SIZE cannot be nonpositive");
 
-void outlier_removal(struct LinkedList *pointList) {
-    struct LinkedListNode *node = LinkedList_GetFirst(pointList);
+struct List * outlier_removal(struct List *pointList,
+                              List_print_func_t *out_print_func) {
+    // creeaza lista unde vor fi memorate nodurile ce vor fi sterse
+    // dupa parcurgerea in totalitate a listei
+    struct List *pendingRemoves = List_Create();
     
-    while (node) {
-        struct LinkedList *window = LinkedList_GetSubCentered(pointList, node, K/2);
+    struct ListNode *windowStart = List_GetFirstNode(pointList);
+    
+    while (windowStart) {
+        // obtine fereastra
         
-        struct LinkedListNode *nextNode = LinkedListNode_GetNext(node);
+        struct ListNode *windowEnd;
+        size_t span;
         
-        if (window) {
-            float value = (**(const struct Point **)LinkedListNode_GetData(node)).value;
+        List_GetSpanNode(pointList,
+                         windowStart,
+                         WINDOW_SIZE - 1,
+                         true,
+                         &windowEnd,
+                         &span);
+        
+        struct ListNode *windowCenter = List_GetNodesMiddle(pointList,
+                                                            windowStart,
+                                                            windowEnd);
+        
+        size_t windowSize = span + 1;
+        
+        if (windowSize != WINDOW_SIZE) { goto skip_node; }
+        
+        // salveaza valoarea de referinta
+        double value =
+            (*(struct Point **)ListNode_GetData(windowCenter))->value;
+        
+        // calculeaza media aritmetica a ferestrei
+        
+        double avg = 0.0;
+        
+        struct ListNode *curr = windowStart;
+        
+        while (curr != ListNode_GetNext(windowEnd)) {
+            avg += (*(struct Point **)ListNode_GetData(curr))->value;
             
-            float avg = average(window);
-            float sigma = standard_deviation(window, avg);
-            
-            if ((value < (avg - sigma)) || (value > (avg + sigma))) {
-                LinkedList_Remove(pointList, node, false);
-            }
+            curr = ListNode_GetNext(curr);
         }
         
-        node = nextNode;
+        avg /= windowSize; 
         
-        LinkedList_Destroy(window);
+        // calculeaza deviata standard a ferestrei
+        
+        double sigma = 0.0;
+        
+        curr = windowStart;
+        
+        while (curr != ListNode_GetNext(windowEnd)) {
+            sigma += pow(
+                (*(struct Point **)ListNode_GetData(curr))->value - avg,
+                2.0
+            );
+            
+            curr = ListNode_GetNext(curr);
+        }
+        
+        sigma /= windowSize;
+        
+        sigma = sqrt(sigma);
+        
+        // filtreaza valorile in functie de media aritmetica
+        // si deviata standard; nodurile nu sunt sterse imediat,
+        // ci sunt adaugate intr-o alta lista
+        // care va fi parcursa la final pentru stergerea lor
+        if ((value < (avg - sigma)) || (value > (avg + sigma))) {
+            List_AddDataLast(pendingRemoves,
+                             &(struct Data){
+                                 &windowCenter,
+                                 sizeof windowCenter
+                             });
+        }
+        
+    skip_node:
+        windowStart = ListNode_GetNext(windowStart);
     }
+    
+    // sterge nodurile marcate pentru stergere din lista de puncte
+    
+    struct ListNode *curr = List_GetFirstNode(pendingRemoves);
+    
+    while (curr) {
+        List_RemoveNode(
+            pointList, **(struct ListNode ***)ListNode_GetData(curr),
+            false
+        );
+        
+        curr = ListNode_GetNext(curr);
+    }
+    
+    // distruge lista temporara de noduri marcate pentru stergere
+    List_Destroy(pendingRemoves);
+    
+    *out_print_func = Point_List_print_func;
+    
+    return pointList;
 }

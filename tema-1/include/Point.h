@@ -1,10 +1,16 @@
-#pragma once
+#ifndef POINT_H
+#define POINT_H
 
-#include "LinkedList.h"
+#include "Data.h"
 
 struct Point {
     unsigned timestamp;
-    float value;
+    double value;
 };
 
-void Point_LinkedList_print_func(const struct LinkedListData *data);
+int Point_List_comp_func(const struct Data *first,
+                         const struct Data *second);
+
+void Point_List_print_func(const struct Data *data);
+
+#endif // POINT_H
