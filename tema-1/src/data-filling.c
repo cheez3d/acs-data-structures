@@ -15,10 +15,11 @@
 
 _Static_assert(TOLERANCE > 0, "TOLERANCE cannot be nonpositive");
 _Static_assert(FILLING_RATE > 0, "FILLING_RATE cannot be nonpositive");
+_Static_assert(FILLING_RATE <= TOLERANCE, "FILLING_RATE cannot be greater than TOLERANCE");
 _Static_assert(REACH > 0, "REACH cannot be nonpositive");
 
 // functie pentru calcularea ponderilor
-static double weight(size_t i, size_t k) {
+static inline double weight(size_t i, size_t k) {
     if (i >= k) { return 1.0; }
     
     double w = pow((double)i / (k - 1), 2.0) * 0.9 + 0.1;
@@ -35,7 +36,7 @@ static double weight(size_t i, size_t k) {
 }
 
 // functie pentru calcularea factorului de scalare 'C' din cerinta
-static double scaling_factor(double timestamp,
+static inline double scaling_factor(double timestamp,
                              double leftTimestamp,
                              double rightTimestamp) {
     if (leftTimestamp > rightTimestamp) {

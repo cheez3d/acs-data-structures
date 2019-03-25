@@ -3,11 +3,11 @@
 
 [main-c]: src/main.c
 
-[outlier-removal-c]: src/outlier_removal.c
-[noise-removal-median-c]: src/noise_removal_median.c
-[noise-removal-a-mean-c]: src/noise_removal_a_mean.c
-[time-levelling-c]: src/time_levelling.c
-[data-filling-c]: src/data_filling.c
+[outlier-removal-c]: src/outlier-removal.c
+[noise-removal-median-c]: src/noise-removal-median.c
+[noise-removal-a-mean-c]: src/noise-removal-a-mean.c
+[time-levelling-c]: src/time-levelling.c
+[data-filling-c]: src/data-filling.c
 [statistics-c]: src/statistics.c
 
 [List-h]: include/List.h
@@ -59,9 +59,9 @@ Partea principală ce se ocupă de evaluarea argumentelor transmise prin linia d
 Acest program nu se folosește de funcții ajutătoare implementate separat în fișierul sursă [helpers.c][helpers-c].
 
 ## Rezolvarea sarcinilor de lucru
-1. eliminarea de excepții folosind statistici ([outlier_removal.c][outlier-removal-c])
-2. eliminarea de zgomot prin filtru median ([noise_removal_median.c][noise-removal-median-c])
-3. eliminarea de zgomot prin flitru bazat pe media aritmetică ([noise_removal_a_mean.c][noise-removal-a-mean-c])
-4. uniformizarea frecvenței ([time_levelling.c][time-levelling-c])
-5. completarea datelor lipsă ([data_filling.c][data-filling-c])
+1. eliminarea de excepții folosind statistici ([outlier-removal.c][outlier-removal-c])
+2. eliminarea de zgomot prin filtru median ([noise-removal-median.c][noise-removal-median-c])
+3. eliminarea de zgomot prin flitru bazat pe media aritmetică ([noise-removal-a-mean.c][noise-removal-a-mean-c])
+4. uniformizarea frecvenței ([time-levelling.c][time-levelling-c])
+5. completarea datelor lipsă ([data-filling.c][data-filling-c])
 6. calculul statisticilor ([statistics.c][statistics-c])

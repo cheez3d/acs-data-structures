@@ -133,14 +133,16 @@ int main(int argc, const char *argv[]) {
     struct List *pointList = List_Create();
     
     size_t pointCount = 0;
-    scanf("%zu", &pointCount);
+    if (!scanf("%zu", &pointCount)) { return EXIT_FAILURE; }
     
     for (size_t i = 0; i < pointCount; ++i) {
         struct Point point;
         point.timestamp = 0;
         point.value = 0.0;
         
-        scanf("%u %lf", &point.timestamp, &point.value);
+        if (!scanf("%u %lf", &point.timestamp, &point.value)) {
+            return EXIT_FAILURE;
+        }
         
         List_AddDataLast(pointList,
                          &(struct Data){ &point, sizeof point });

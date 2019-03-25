@@ -52,12 +52,13 @@ struct List * noise_removal_a_mean(struct List *pointList,
         
         avg /= windowSize; 
         
+        struct Point avgPoint = (struct Point){ timestamp, avg };
+        
+        struct Data avgPointContainer =
+            (struct Data){ &avgPoint, sizeof avgPoint };
+        
         // adauga noul punct in lista temporara
-        List_AddDataLast(newPointList,
-                         &(struct Data){
-                             &(struct Point){ timestamp, avg },
-                             sizeof(struct Point)
-                         });
+        List_AddDataLast(newPointList, &avgPointContainer);
         
     skip_node:
         windowStart = ListNode_GetNext(windowStart);
