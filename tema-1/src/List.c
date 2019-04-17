@@ -1,1323 +1,1558 @@
 #include "List.h"
 
+#include "helpers.h"
+
 #include "Data.h"
 
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
+#define NDEBUG
+#include <assert.h>
+
+// PRIVATE
+
 struct ListNode {
-    struct Data *data;
-    
-    struct ListNode *next;
-    struct ListNode *prev;
-    
-    struct List *list;
+	struct Data *data;
+	
+	struct ListNode *next;
+	struct ListNode *prev;
+	
+	struct List *list;
 };
 
 struct List {
-    size_t size;
-    
-    struct ListNode *head;
-    struct ListNode *tail;
+	size_t size;
+	
+	struct ListNode *head;
+	struct ListNode *tail;
 };
 
-// PRIVATE // TODO: add setters
-
-static struct ListNode * CreateNode(const struct Data *data) {
-    struct ListNode *node = malloc(sizeof *node);
-    
-    node->data = Data_Copy(data); // copiaza datele in nod
-    
-    // initializeaza legaturile nodului
-    node->next = NULL;
-    node->prev = NULL;
-    
-    return node;
-}
-
-static struct ListNode * CopyNode(const struct ListNode *node) {
-    if (!node) { goto error; }
-    
-    return CreateNode(node->data);
-    
-error:
-    return NULL;
-}
-
-static struct List * Create() {
-    // creeaza lista
-    struct List *list = malloc(sizeof *list);
-    
-    // creeaza nodurile santinela ale listei
-    struct ListNode *head = CreateNode(NULL);
-    struct ListNode *tail = CreateNode(NULL);
-    
-    // leaga cele doua noduri santinela intre ele
-    head->next = tail;
-    tail->prev = head;
-    
-    // seteaza lista caruia nodurile santinela apratin
-    head->list = list;
-    tail->list = list;
-    
-    // initializeaza lista
-    
-    list->size = 0;
-    
-    list->head = head;
-    list->tail = tail;
-    
-    return list;
-}
-
 static struct Data * GetNodeData(const struct ListNode *node) {
-    if (!node) { goto error; }
-    
-    return node->data;
-    
-error:
-    return NULL;
+	assert(node);
+	
+	return node->data;
 }
 
 static struct ListNode * GetNodeNext(const struct ListNode *node) {
-    if (!node) { goto error; }
-    
-    return node->next;
-    
-error:
-    return NULL;
+	assert(node);
+	
+	return node->next;
 }
 
 static struct ListNode * GetNodePrev(const struct ListNode *node) {
-    if (!node) { goto error; }
-    
-    return node->prev;
-    
-error:
-    return NULL;
+	assert(node);
+	
+	return node->prev;
 }
 
 static struct List * GetNodeList(const struct ListNode *node) {
-    if (!node) { goto error; }
-    
-    return node->list;
-    
-error:
-    return NULL;
+	assert(node);
+	
+	return node->list;
+}
+
+static void SetNodeData(struct ListNode *node, const struct Data *data) {
+	assert(node);
+	
+	node->data = (struct Data *)data;
+}
+
+static void SetNodeNext(struct ListNode *node, const struct ListNode *next) {
+	assert(node);
+	
+	node->next = (struct ListNode *)next;
+}
+
+static void SetNodePrev(struct ListNode *node, const struct ListNode *prev) {
+	assert(node);
+	
+	node->prev = (struct ListNode *)prev;
+}
+
+static void SetNodeList(struct ListNode *node, const struct List *list) {
+	assert(node);
+	
+	node->list = (struct List *)list;
+}
+
+static struct ListNode * CreateNode(const struct Data *data) {
+	struct ListNode *node = malloc(sizeof *node);
+	
+	SetNodeData(node, data ? Data_Copy(data) : NULL); // copiaza datele in nod
+	
+	// initializeaza legaturile nodului
+	SetNodeNext(node, NULL);
+	SetNodePrev(node, NULL);
+	
+	SetNodeList(node, NULL);
+	
+	return node;
+}
+
+static struct ListNode * CopyNode(const struct ListNode *node) {
+	assert(node);
+	
+	return CreateNode(GetNodeData(node));
+}
+
+static struct ListNode * Node_Data_Unwrap(const struct Data *data) {
+	assert(data);
+	assert(data->mem);
+	
+	return *(struct ListNode **)data->mem;
 }
 
 static size_t GetSize(const struct List *list) {
-    if (!list) { goto error; }
-    
-    return list->size;
-    
-error:
-    return 0;
-}
-
-static bool IsEmpty(const struct List *list) {
-    if (!list) { goto error; }
-    
-    return GetSize(list) == 0;
-    
-error:
-    return true;
+	assert(list);
+	
+	return list->size;
 }
 
 static struct ListNode * GetHeadNode(const struct List *list) {
-    if (!list) { goto error; }
-    
-    return list->head;
-    
-error:
-    return NULL;
+	assert(list);
+	
+	return list->head;
 }
 
 static struct ListNode * GetTailNode(const struct List *list) {
-    if (!list) { goto error; }
-    
-    return list->tail;
-    
-error:
-    return NULL;
+	assert(list);
+	
+	return list->tail;
 }
 
-static bool IsNodeHeadOrTail(const struct ListNode *node) {
-    const struct List *list = GetNodeList(node);
-    
-    if (!list) { goto error; }
-    
-    return (node == GetHeadNode(list)) || (node == GetTailNode(list));
-    
-error:
-    return false;
+static void SetSize(struct List *list, size_t size) {
+	assert(list);
+	
+	list->size = size;
+}
+
+static void SetHead(struct List *list, const struct ListNode *head) {
+	assert(list);
+	
+	list->head = (struct ListNode *)head;
+}
+
+static void SetTail(struct List *list, const struct ListNode *tail) {
+	assert(list);
+	
+	list->tail = (struct ListNode *)tail;
+}
+
+static struct List * Create() {
+	// creeaza lista
+	struct List *list = malloc(sizeof *list);
+	
+	// creeaza nodurile santinela ale listei
+	struct ListNode *head = CreateNode(NULL);
+	struct ListNode *tail = CreateNode(NULL);
+	
+	// leaga cele doua noduri santinela intre ele
+	SetNodeNext(head, tail);
+	SetNodePrev(tail, head);
+	
+	// seteaza lista caruia nodurile santinela apratin
+	SetNodeList(head, list);
+	SetNodeList(tail, list);
+	
+	// initializeaza lista
+	
+	SetSize(list, 0);
+	
+	SetHead(list, head);
+	SetTail(list, tail);
+	
+	return list;
+}
+
+static bool UNUSED IsNodeOrphan(const struct ListNode *node) {
+	assert(node);
+	
+	return GetNodeList(node) == NULL;
+}
+
+static bool UNUSED IsNodeHeadOrTail(const struct ListNode *node) {
+	assert(node);
+	
+	const struct List *list = GetNodeList(node);
+	
+	assert(list);
+	
+	return (node == GetHeadNode(list)) || (node == GetTailNode(list));
+}
+
+static bool AreNodesConnected_va_list(size_t count,
+                                      const struct ListNode *first,
+                                      va_list ap)
+{
+	assert(count >= 2);
+	
+	assert(first);
+	
+	const struct List *firstList = GetNodeList(first);
+	
+	assert(firstList);
+	
+	for (size_t i = 2; i < count; ++i) {
+		const struct ListNode *node = va_arg(ap, const struct ListNode *);
+		
+		assert(node);
+		
+		const struct List *list = GetNodeList(node);
+		
+		assert(list);
+		
+		if (list != firstList) {
+			return false;
+		}
+	}
+	
+	return true;
+}
+
+static bool AreNodesConnected_va_arg(size_t count,
+                                     const struct ListNode *first,
+                                     ...)
+{
+	assert(count >= 2);
+	
+	assert(first);
+	
+	va_list ap;
+	va_start(ap, first);
+	
+	bool res = AreNodesConnected_va_list(count, first, ap);
+	
+	va_end(ap);
+	
+	return res;
+}
+
+static bool UNUSED AreNodesConnected(const struct ListNode *first,
+                                     const struct ListNode *second)
+{
+	assert(first);
+	assert(second);
+	
+	return AreNodesConnected_va_arg(2, first, second);
 }
 
 static bool IsNodeAfter(const struct ListNode *node,
-                        const struct ListNode *ref) {
-    if (!node || !ref) { goto error; }
-    
-    const struct List *nodeList = GetNodeList(node);
-    const struct List *refList = GetNodeList(ref);
-    
-    if (!nodeList || !refList) { goto error; }
-    if (nodeList != refList) { goto error; }
-    
-    return GetNodeNext(ref) == node;
-    
-error:
-    return false;
+                        const struct ListNode *ref)
+{
+	assert(node);
+	assert(ref);
+	
+	assert(AreNodesConnected(node, ref));
+	
+	return GetNodeNext(ref) == node;
 }
 
 static bool IsNodeBefore(const struct ListNode *node,
-                         const struct ListNode *ref) {
-    if (!node || !ref) { goto error; }
-    
-    const struct List *nodeList = GetNodeList(node);
-    const struct List *refList = GetNodeList(ref);
-    
-    if (!nodeList || !refList) { goto error; }
-    if (nodeList != refList) { goto error; }
-    
-    return GetNodePrev(ref) == node;
-    
-error:
-    return false;
+                         const struct ListNode *ref)
+{
+	assert(node);
+	assert(ref);
+	
+	assert(AreNodesConnected(node, ref));
+	
+	return GetNodePrev(ref) == node;
 }
 
 static bool IsNodeBetween(const struct ListNode *node,
                           const struct ListNode *left,
-                          const struct ListNode *right) {
-    if (!node || !left || !right) { goto error; }
-    
-    return IsNodeAfter(node, left) && IsNodeBefore(node, right);
-    
-error:
-    return false;
+                          const struct ListNode *right)
+{
+	assert(node);
+	assert(left);
+	assert(right);
+	
+	assert(AreNodesConnected_va_arg(3, node, left, right));
+	
+	return IsNodeAfter(node, left) && IsNodeBefore(node, right);
 }
 
 static bool IsNodeSuccessor(const struct ListNode *node,
-                            const struct ListNode *ref) {
-    if (!node || !ref) { goto error; }
-    
-    const struct List *nodeList = GetNodeList(node);
-    const struct List *refList = GetNodeList(ref);
-    
-    if (!nodeList || !refList) { goto error; }
-    if (nodeList != refList) { goto error; }
-    
-    if (node == ref) { return false; }
-    if (node == GetTailNode(nodeList)) { return true; }
-    if (ref == GetHeadNode(nodeList)) { return true; }
-    
-    while ((node = GetNodePrev(node)) != GetHeadNode(nodeList)) {
-        if (node == ref) { return true; }
-    }
-    
-    return false;
-    
-error:
-    return false;
+                            const struct ListNode *ref)
+{
+	assert(node);
+	assert(ref);
+	
+	assert(AreNodesConnected(node, ref));
+	
+	const struct List *list = GetNodeList(node);
+	
+	if (node == ref) { return false; }
+	if (node == GetTailNode(list)) { return true; }
+	if (ref == GetHeadNode(list)) { return true; }
+	
+	while ((node = GetNodePrev(node)) != GetHeadNode(list)) {
+		if (node == ref) { return true; }
+	}
+	
+	return false;
 }
 
 static bool IsNodePredecessor(const struct ListNode *node,
-                              const struct ListNode *ref) {
-    if (!node || !ref) { goto error; }
-    
-    const struct List *nodeList = GetNodeList(node);
-    const struct List *refList = GetNodeList(ref);
-    
-    if (!nodeList || !refList) { goto error; }
-    if (nodeList != refList) { goto error; }
-    
-    if (node == ref) { return false; }
-    if (node == GetHeadNode(nodeList)) { return true; }
-    if (ref == GetTailNode(nodeList)) { return true; }
-    
-    while ((node = GetNodeNext(node)) != GetTailNode(nodeList)) {
-        if (node == ref) { return true; }
-    }
-    
-    return false;
-    
-error:
-    return false;
+                              const struct ListNode *ref)
+{
+	assert(node);
+	assert(ref);
+	
+	assert(AreNodesConnected(node, ref));
+	
+	const struct List *list = GetNodeList(node);
+	
+	if (node == ref) { return false; }
+	if (node == GetHeadNode(list)) { return true; }
+	if (ref == GetTailNode(list)) { return true; }
+	
+	while ((node = GetNodeNext(node)) != GetTailNode(list)) {
+		if (node == ref) { return true; }
+	}
+	
+	return false;
 }
 
-static bool IsNodeBounded(const struct ListNode *node,
-                          const struct ListNode *left,
-                          const struct ListNode *right) {
-    if (!node || !left || !right) { goto error; }
-    
-    const struct List *nodeList = GetNodeList(node);
-    const struct List *leftList = GetNodeList(left);
-    const struct List *rightList = GetNodeList(right);
-    
-    if (!nodeList || !leftList || !rightList) { goto error; }
-    if (nodeList != leftList) { goto error; }
-    if (nodeList != rightList) { goto error; }
-    if (leftList != rightList) { goto error; }
-    
-    return (IsNodeSuccessor(node, left) && IsNodePredecessor(node, right)) ||
-           (IsNodeSuccessor(node, right) && IsNodePredecessor(node, left));
-    
-error:
-    return false;
+static bool IsNodeBoundedBy(const struct ListNode *node,
+                            const struct ListNode *left,
+                            const struct ListNode *right)
+{
+	assert(node);
+	assert(left);
+	assert(right);
+	
+	assert(AreNodesConnected_va_arg(3, node, left, right));
+	
+	return (IsNodeSuccessor(node, left) && IsNodePredecessor(node, right)) ||
+	       (IsNodeSuccessor(node, right) && IsNodePredecessor(node, left));
 }
 
 static bool AreNodesNeighbors(const struct ListNode *left,
                               const struct ListNode *right) {
-    const struct List *leftList = GetNodeList(left);
-    const struct List *rightList = GetNodeList(right);
-    
-    if (!leftList) { goto error; }
-    if (!rightList) { goto error; }
-    if (leftList != rightList) { goto error; }
-    
-    return ((GetNodeNext(left) == right) && (GetNodePrev(right) == left)) ||
-           ((GetNodeNext(right) == left) && (GetNodePrev(left) == right));
-    
-error:
-    return false;
+	assert(left);
+	assert(right);
+	
+	assert(AreNodesConnected(left, right));
+	
+	return ((GetNodeNext(left) == right) && (GetNodePrev(right) == left)) ||
+	       ((GetNodeNext(right) == left) && (GetNodePrev(left) == right));
 }
 
 static struct ListNode * GetFirstNode(const struct List *list) {
-    return GetNodeNext(GetHeadNode(list));
+	assert(list);
+	
+	return GetNodeNext(GetHeadNode(list));
 }
 
 static struct ListNode * GetLastNode(const struct List *list) {
-    return GetNodePrev(GetTailNode(list));
+	assert(list);
+	
+	return GetNodePrev(GetTailNode(list));
+}
+
+static bool IsEmpty(const struct List *list) {
+	assert(list);
+	
+	return GetSize(list) == 0;
 }
 
 static bool ContainsNode(const struct List *list,
-                         const struct ListNode *node) {
-    if (!list) { goto error; }
-    if (!node) { goto error; }
-    
-    return GetNodeList(node) == list;
-    
-error:
-    return NULL;
+                         const struct ListNode *node)
+{
+	assert(list);
+	assert(node);
+	
+	return GetNodeList(node) == list;
 }
 
 static struct ListNode * ContainsData(const struct List *list,
                                       const struct Data *data,
-                                      List_comp_func_t comp_func) {
-    if (!comp_func) { goto error; }
-    
-    struct ListNode *curr = GetFirstNode(list);
-    
-    while (curr != GetTailNode(list)) {
-        // verifica daca a fost gasit un nod
-        // ale carui date corespund cu cele cautate
-        if (comp_func(GetNodeData(curr), data) == 0) { return curr; }
-        
-        curr = GetNodeNext(curr);
-    }
-    
-    return NULL;
-    
-error:
-    return NULL;
+                                      Data_comp_func_t comp_func)
+{
+	assert(list);
+	assert(data);
+	assert(comp_func);
+	
+	struct ListNode *curr = GetFirstNode(list);
+	
+	while (curr != GetTailNode(list)) {
+		// verifica daca a fost gasit un nod
+		// ale carui date corespund cu cele cautate
+		if (comp_func(GetNodeData(curr), data) == 0) { return curr; }
+		
+		curr = GetNodeNext(curr);
+	}
+	
+	return NULL;
 }
 
-static struct ListNode * GetNodesMiddle(const struct List *list,
+static struct ListNode * GetNodesMiddle(const struct List UNUSED *list,
                                         const struct ListNode *left,
-                                        const struct ListNode *right) {
-    if (!list) { goto error; }
-    if (!left) { goto error; }
-    if (!right) { goto error; }
-    
-    if (!ContainsNode(list, left)) { goto error; }
-    if (!ContainsNode(list, right)) { goto error; }
-    
-    if (left == right) { return (struct ListNode *)left; }
-    
-    // verifica daca cele doua noduri de delimitare
-    // nu sunt in ordinea potrivita
-    if (!IsNodePredecessor(left, right)) {
-        const struct ListNode *temp = left;
-        left = right;
-        right = temp;
-    }
-    
-    // parcurgem lista atat nod cu nod, cat si din 2 in 2 noduri
-    
-    const struct ListNode *doubleStep = left;
-    const struct ListNode *step = left;
-    
-    while (GetNodeNext(doubleStep) &&
-           (GetNodeNext(doubleStep) != GetNodeNext(right)) &&
-           GetNodeNext(GetNodeNext(doubleStep)) &&
-           (GetNodeNext(GetNodeNext(doubleStep)) != GetNodeNext(right))) {
-        doubleStep = GetNodeNext(GetNodeNext(doubleStep));
-        
-        step = GetNodeNext(step);
-    }
-    
-    return (struct ListNode *)step;
-    
-error:
-    return NULL;
+                                        const struct ListNode *right)
+{
+	assert(list);
+	assert(left);
+	assert(right);
+	
+	assert(ContainsNode(list, left));
+	assert(ContainsNode(list, right));
+	
+	if (left == right) { return (struct ListNode *)left; }
+	
+	// verifica daca cele doua noduri de delimitare
+	// nu sunt in ordinea potrivita
+	if (!IsNodePredecessor(left, right)) {
+		const struct ListNode *temp = left;
+		left = right;
+		right = temp;
+	}
+	
+	// parcurgem lista atat nod cu nod, cat si din 2 in 2 noduri
+	
+	const struct ListNode *doubleStep = left;
+	const struct ListNode *step = left;
+	
+	while (GetNodeNext(doubleStep) &&
+	       (GetNodeNext(doubleStep) != GetNodeNext(right)) &&
+	       GetNodeNext(GetNodeNext(doubleStep)) &&
+	       (GetNodeNext(GetNodeNext(doubleStep)) != GetNodeNext(right)))
+	{
+		doubleStep = GetNodeNext(GetNodeNext(doubleStep));
+		
+		step = GetNodeNext(step);
+	}
+	
+	return (struct ListNode *)step;
 }
 
 static struct ListNode * GetMiddleNode(const struct List *list) {
-    if (!list) { goto error; }
-    
-    return GetNodesMiddle(list, GetHeadNode(list), GetTailNode(list));
-    
-error:
-    return NULL;
+	assert(list);
+	
+	return GetNodesMiddle(list, GetHeadNode(list), GetTailNode(list));
 }
 
 static struct Data * DestroyNode(struct ListNode *node) {
-    if (!node) { goto error; }
-    
-    // verifica daca se incearca distrugerea
-    // unui nod care apartine unei liste
-    if (GetNodeList(node)) { goto error; }
-    
-    struct Data *data = node->data;
-    
-    free(node); // elibereaza memoria ocupata de nod
-    
-    return data;
-    
-error:
-    return NULL;
+	assert(node);
+	
+	// verifica daca se incearca distrugerea
+	// unui nod care inca apartine unei liste
+	assert(IsNodeOrphan(node));
+	
+	struct Data *data = GetNodeData(node);
+	
+	free(node); // elibereaza memoria ocupata de nod
+	
+	return data;
 }
 
-static void GetSpanNode(const struct List *list,
-                         const struct ListNode *start,
-                         size_t span,
-                         bool forward,
-                         struct ListNode **out_end,
-                         size_t *out_span) {
-    if (!list) { goto error; }
-    if (!start) { goto error; }
-    
-    if (!out_end) { goto error; }
-    
-    if (!ContainsNode(list, start)) { goto error; }
-    if (GetSize(list) == 0) { goto error; }
-    if (IsNodeHeadOrTail(start)) { goto error; }
-    
-    struct ListNode *bound = forward ?
-                             GetLastNode(list) :
-                             GetFirstNode(list);
-    
-    struct ListNode * (*step_func)(const struct ListNode *) = forward ?
-                                                              GetNodeNext :
-                                                              GetNodePrev;
-    
-    const struct ListNode *curr = start;
-    size_t currSpan = 0;
-    
-    while (currSpan < span) {
-        if (curr == bound) { break; }
-        
-        curr = step_func(curr);
-        
-        ++currSpan;
-    }
-    
-    *out_end = (struct ListNode *)curr;
-    if (out_span) { *out_span = currSpan; }
-    
-    return;
-    
-error:
-    *out_end = NULL;
-    if (out_span) { *out_span = 0; }
-    
-    return;
+static void GetNodeSpanNode(const struct ListNode *start,
+                            size_t span,
+                            bool forward,
+                            struct ListNode **out_end,
+                            size_t *out_span)
+{
+	assert(start);
+	assert(out_end);
+	
+	assert(!IsNodeOrphan(start));
+	assert(!IsNodeHeadOrTail(start));
+	
+	struct List *list = GetNodeList(start);
+	
+	struct ListNode *boundary = forward ?
+	                            GetLastNode(list) :
+	                            GetFirstNode(list);
+	
+	struct ListNode * (*step_func)(const struct ListNode *) = forward ?
+	                                                          GetNodeNext :
+	                                                          GetNodePrev;
+	
+	const struct ListNode *curr = start;
+	size_t currSpan = 0;
+	
+	while (currSpan < span) {
+		if (curr == boundary) { break; }
+		
+		curr = step_func(curr);
+		
+		++currSpan;
+	}
+	
+	*out_end = (struct ListNode *)curr;
+	if (out_span) { *out_span = currSpan; }
 }
 
-static void GetRadiusNodes(const struct List *list,
-                           const struct ListNode *center,
-                           size_t radius,
-                           struct ListNode **out_left,
-                           struct ListNode **out_right,
-                           size_t *out_leftRadius,
-                           size_t *out_rightRadius) {
-    // TODO: add proper error system instead of relying on functions
-    // returning NULL pointers or values indicating error depending on
-    // function return type
-    
-    if (!list || !center) { goto error; }
-    if (!out_left || !out_right) { goto error; }
-    
-    if (!ContainsNode(list, center)) { goto error; }
-    if (GetSize(list) == 0) { goto error; }
-    if (IsNodeHeadOrTail(center)) { goto error; }
-    
-    const struct ListNode *currLeft = center;
-    size_t leftRadius = 0;
-    
-    while (leftRadius < radius) {
-        if (currLeft == GetFirstNode(list)) { break; }
-        
-        currLeft = GetNodePrev(currLeft);
-        
-        ++leftRadius;
-    }
-    
-    const struct ListNode *currRight = center;
-    size_t rightRadius = 0;
-    
-    while (rightRadius < radius) {
-        if (currRight == GetLastNode(list)) { break; }
-        
-        currRight = GetNodeNext(currRight);
-        
-        ++rightRadius;
-    }
-    
-    *out_left = (struct ListNode *)currLeft;
-    *out_right = (struct ListNode *)currRight;
-    if (out_leftRadius) { *out_leftRadius = leftRadius; }
-    if (out_rightRadius) { *out_rightRadius = rightRadius; }
-    
-    return;
-    
-error:
-    *out_left = NULL;
-    *out_right = NULL;
-    if (out_leftRadius) { *out_leftRadius = 0; }
-    if (out_rightRadius) { *out_rightRadius = 0; }
-    
-    return;
+static void GetNodeRadiusNodes(const struct ListNode *center,
+                               size_t radius,
+                               struct ListNode **out_left,
+                               struct ListNode **out_right,
+                               size_t *out_leftRadius,
+                               size_t *out_rightRadius)
+{
+	assert(center);
+	assert(out_left);
+	assert(out_right);
+	
+	assert(!IsNodeOrphan(center));
+	assert(!IsNodeHeadOrTail(center));
+	
+	struct List *list = GetNodeList(center);
+	
+	const struct ListNode *currLeft = center;
+	size_t leftRadius = 0;
+	
+	while (leftRadius < radius) {
+		if (currLeft == GetFirstNode(list)) { break; }
+		
+		currLeft = GetNodePrev(currLeft);
+		
+		++leftRadius;
+	}
+	
+	const struct ListNode *currRight = center;
+	size_t rightRadius = 0;
+	
+	while (rightRadius < radius) {
+		if (currRight == GetLastNode(list)) { break; }
+		
+		currRight = GetNodeNext(currRight);
+		
+		++rightRadius;
+	}
+	
+	*out_left = (struct ListNode *)currLeft;
+	*out_right = (struct ListNode *)currRight;
+	if (out_leftRadius) { *out_leftRadius = leftRadius; }
+	if (out_rightRadius) { *out_rightRadius = rightRadius; }
 }
 
 static struct ListNode * AddNodeBetween(struct List *list,
                                         struct ListNode *node,
                                         struct ListNode *left,
-                                        struct ListNode *right) {
-    if (!list) { goto error; }
-    if (!node) { goto error; }
-    if (!left) { goto error; }
-    if (!right) { goto error; }
-    
-    // verifica daca nodurile se afla in lista
-    if (!ContainsNode(list, left)) { goto error; }
-    if (!ContainsNode(list, right)) { goto error; }
-    
-    // verifica daca se incearca inserarea
-    // inainte de nodul santinela de inceput
-    // sau dupa nodul santinela de sfarsit
-    if (right == GetHeadNode(list)) { goto error; }
-    if (left == GetTailNode(list)) { goto error; }
-    
-    // verifica daca nodurile intre care se insereaza sunt vecine
-    if (!AreNodesNeighbors(left, right)) { goto error; }
-    
-    // configureaza legaturile nodului
-    node->prev = left;
-    node->next = right;
-    
-    node->list = list; // seteaza lista caruia nodul apartine
-    
-    // insereaza nodul in lista
-    left->next = node;
-    right->prev = node;
-    
-    ++(list->size); // mareste numarul de noduri din lista
-    
-    return node; // returneaza nodul inserat
-    
-error:
-    return NULL;
+                                        struct ListNode *right)
+{
+	assert(list);
+	assert(node);
+	assert(left);
+	assert(right);
+	
+	// verifica daca nodurile se afla in lista
+	assert(ContainsNode(list, left));
+	assert(ContainsNode(list, right));
+	
+	// verifica daca se incearca inserarea
+	// inainte de nodul santinela de inceput
+	// sau dupa nodul santinela de sfarsit
+	assert(right != GetHeadNode(list));
+	assert(left != GetTailNode(list));
+	
+	// verifica daca nodurile intre care se insereaza sunt vecine
+	assert(AreNodesNeighbors(left, right));
+	
+	// configureaza legaturile nodului
+	SetNodePrev(node, left);
+	SetNodeNext(node, right);
+	
+	SetNodeList(node, list); // seteaza lista caruia nodul apartine
+	
+	// insereaza nodul in lista
+	SetNodeNext(left, node);
+	SetNodePrev(right, node);
+	
+	SetSize(list, GetSize(list) + 1); // mareste numarul de noduri din lista
+	
+	return node; // returneaza nodul inserat
 }
 
 static struct ListNode * AddNodeAfter(struct List *list,
                                       struct ListNode *node,
-                                      struct ListNode *ref) {
-    return AddNodeBetween(list, node, ref, GetNodeNext(ref));
+                                      struct ListNode *ref)
+{
+	assert(list);
+	assert(node);
+	assert(ref);
+	
+	return AddNodeBetween(list, node, ref, GetNodeNext(ref));
 }
 
 static struct ListNode * AddNodeBefore(struct List *list,
-                                      struct ListNode *node,
-                                      struct ListNode *ref) {
-    return AddNodeBetween(list, node, GetNodePrev(ref), ref);
+                                       struct ListNode *node,
+                                       struct ListNode *ref)
+{
+	assert(list);
+	assert(node);
+	assert(ref);
+	
+	return AddNodeBetween(list, node, GetNodePrev(ref), ref);
 }
 
 static struct ListNode * AddNodeFirst(struct List *list,
-                                      struct ListNode *node) {
-    return AddNodeAfter(list, node, GetHeadNode(list));
+                                      struct ListNode *node)
+{
+	assert(list);
+	assert(node);
+	
+	return AddNodeAfter(list, node, GetHeadNode(list));
 }
 
 static struct ListNode * AddNodeLast(struct List *list,
-                                     struct ListNode *node) {
-    return AddNodeBefore(list, node, GetTailNode(list));
+                                     struct ListNode *node)
+{
+	assert(list);
+	assert(node);
+	
+	return AddNodeBefore(list, node, GetTailNode(list));
 }
 
 static struct ListNode * AddDataBetween(struct List *list,
                                         const struct Data *data,
                                         struct ListNode *left,
-                                        struct ListNode *right) {
-    struct ListNode *node = CreateNode(data);
-    
-    if (!AddNodeBetween(list, node, left, right)) { goto error; }
-    
-    return node;
-    
-error:
-    DestroyNode(node);
-    
-    return NULL;
+                                        struct ListNode *right)
+{
+	assert(list);
+	assert(data);
+	assert(left);
+	assert(right);
+	
+	assert(AreNodesNeighbors(left, right));
+	
+	return AddNodeBetween(list, CreateNode(data), left, right);;
 }
 
 static struct ListNode * AddDataAfter(struct List *list,
                                       const struct Data *data,
-                                      struct ListNode *ref) {
-    return AddDataBetween(list, data, ref, GetNodeNext(ref));
+                                      struct ListNode *ref)
+{
+	assert(list);
+	assert(data);
+	assert(ref);
+	
+	return AddDataBetween(list, data, ref, GetNodeNext(ref));
 }
 
 static struct ListNode * AddDataBefore(struct List *list,
                                        const struct Data *data,
-                                       struct ListNode *ref) {
-    return AddDataBetween(list, data, GetNodePrev(ref), ref);
+                                       struct ListNode *ref)
+{
+	assert(list);
+	assert(data);
+	assert(ref);
+	
+	return AddDataBetween(list, data, GetNodePrev(ref), ref);
 }
 
 static struct ListNode * AddDataFirst(struct List *list,
-                                      const struct Data *data) {
-    return AddDataAfter(list, data, GetHeadNode(list));
+                                      const struct Data *data)
+{
+	assert(list);
+	assert(data);
+	
+	return AddDataAfter(list, data, GetHeadNode(list));
 }
 
 static struct ListNode * AddDataLast(struct List *list,
-                                     const struct Data *data) {
-    return AddDataBefore(list, data, GetTailNode(list));
+                                     const struct Data *data)
+{
+	assert(list);
+	assert(data);
+	
+	return AddDataBefore(list, data, GetTailNode(list));
 }
 
-static struct List * CreateSubNodes(const struct List *list,
-                                    const struct ListNode *left,
-                                    const struct ListNode *right) {
-    if (!list) { goto error; }
-    if (!left) { goto error; }
-    if (!right) { goto error; }
-    
-    // verifica daca nodurile se afla in lista
-    if (!ContainsNode(list, left)) { goto error; }
-    if (!ContainsNode(list, right)) { goto error; }
-    
-    // verifica daca cele doua noduri de delimitare
-    // nu sunt in ordinea potrivita
-    if (!IsNodePredecessor(left, right)) {
-        const struct ListNode *temp = left;
-        left = right;
-        right = temp;
-    }
-    
-    struct List *sub = Create();
-    
-    const struct ListNode *curr = left;
-    
-    while (curr != GetNodeNext(right)) {
-        struct ListNode *copy = CopyNode(curr);
-        
-        AddNodeLast(sub, copy);
-        
-        curr = GetNodeNext(curr);
-    }
-    
-    return sub;
-    
-error:
-    return NULL;
+static struct List * CreateSubFromNodes(const struct List UNUSED *list,
+                                        const struct ListNode *left,
+                                        const struct ListNode *right)
+{
+	assert(list);
+	assert(left);
+	assert(right);
+	
+	// verifica daca nodurile se afla in lista
+	assert(ContainsNode(list, left));
+	assert(ContainsNode(list, right));
+	
+	// verifica daca cele doua noduri de delimitare
+	// nu sunt in ordinea potrivita
+	if (!IsNodePredecessor(left, right)) {
+		const struct ListNode *temp = left;
+		left = right;
+		right = temp;
+	}
+	
+	struct List *sub = Create();
+	
+	const struct ListNode *curr = left;
+	
+	while (curr != GetNodeNext(right)) {
+		struct ListNode *copy = CopyNode(curr);
+		
+		AddNodeLast(sub, copy);
+		
+		curr = GetNodeNext(curr);
+	}
+	
+	return sub;
 }
-#include <stdio.h>
+
 static struct List * Copy(const struct List *list) {
-    if (!list) { goto error; }
-    
-    struct List *copy = Create();
-    
-    const struct ListNode *curr = GetFirstNode(list);
-    
-    while (curr != GetTailNode(list)) {
-        struct ListNode *nodeCopy = CopyNode(curr);
-        
-        AddNodeLast(copy, nodeCopy);
-        
-        curr = GetNodeNext(curr);
-    }
-    
-    return copy;
-    
-error:
-    return NULL;
+	assert(list);
+	
+	struct List *copy = Create();
+	
+	const struct ListNode *curr = GetFirstNode(list);
+	
+	while (curr != GetTailNode(list)) {
+		struct ListNode *nodeCopy = CopyNode(curr);
+		
+		AddNodeLast(copy, nodeCopy);
+		
+		curr = GetNodeNext(curr);
+	}
+	
+	return copy;
 }
 
-static struct List * CreateSubSpan(const struct List *list,
-                                   const struct ListNode *start,
-                                   size_t span,
-                                   bool forward) {
-    if (!list) { goto error; }
-    if (!start) { goto error; }
-    
-    if (!ContainsNode(list, start)) { goto error; }
-    
-    struct ListNode *end;
-    
-    GetSpanNode(list, start, span, forward, &end, NULL);
-    
-    if (!end) { goto error; }
-    
-    struct List *sub = CreateSubNodes(list, start, end);
-    
-    if (!sub) { goto error; }
-    
-    return sub;
-    
-error:
-    return NULL;
+static struct List * CreateSubFromSpan(const struct List *list,
+                                       const struct ListNode *start,
+                                       size_t span,
+                                       bool forward)
+{
+	assert(list);
+	assert(start);
+	
+	assert(ContainsNode(list, start));
+	
+	struct ListNode *end;
+	GetNodeSpanNode(start, span, forward, &end, NULL);
+	
+	return CreateSubFromNodes(list, start, end);
 }
 
-static struct List * CreateSubRadius(const struct List *list,
-                                     const struct ListNode *center,
-                                     size_t radius) {
-    if (!list) { goto error; }
-    if (!center) { goto error; }
-    
-    if (!ContainsNode(list, center)) { goto error; }
-    
-    struct ListNode *left;
-    struct ListNode *right;
-    
-    GetRadiusNodes(list, center, radius, &left, &right, NULL, NULL);
-    
-    if (!left) { goto error; }
-    if (!right) { goto error; }
-    
-    struct List *sub = CreateSubNodes(list, left, right);
-    
-    if (!sub) { goto error; }
-    
-    return sub;
-    
-error:
-    return NULL;
+static struct List * CreateSubFromRadius(const struct List *list,
+                                         const struct ListNode *center,
+                                         size_t radius)
+{
+	assert(list);
+	assert(center);
+	
+	assert(ContainsNode(list, center));
+	
+	struct ListNode *left;
+	struct ListNode *right;
+	GetNodeRadiusNodes(center, radius, &left, &right, NULL, NULL);
+	
+	return CreateSubFromNodes(list, left, right);;
 }
 
-static void Print(const struct List *list, List_print_func_t print_func) {
-    if (!print_func) { goto error; }
-    
-    if (GetSize(list) == 0) { return; }
-    
-    struct ListNode *curr = GetFirstNode(list);
-    
-    while (curr != GetTailNode(list)) {
-        // apeleaza functia ce va procesa datele si le va printa
-        print_func(GetNodeData(curr));
-
-        curr = GetNodeNext(curr);
-    }
-    
-    return;
-    
-error:
-    return;
+static void Process(struct List *list,
+                    Data_proc_func_t proc_func)
+{
+	assert(list);
+	assert(proc_func);
+	
+	struct ListNode *curr = GetFirstNode(list);
+	
+	while (curr != GetTailNode(list)) {
+		proc_func(GetNodeData(curr));
+		
+		curr = GetNodeNext(curr);
+	}
 }
 
-static void SwapNodes(struct List *list,
+static void Print(const struct List *list,
+                  Data_print_func_t print_func,
+                  const char *delim,
+                  const char *endMark,
+                  FILE *stream)
+{
+	assert(list);
+	assert(print_func);
+	assert(stream);
+	
+	struct ListNode *curr = GetFirstNode(list);
+	
+	while (curr != GetTailNode(list)) {
+		print_func(GetNodeData(curr), stream);
+		
+		if (curr != GetLastNode(list)) {
+			if (delim) { fprintf(stream, "%s", delim); }
+		}
+		
+		curr = GetNodeNext(curr);
+	}
+	
+	if (endMark) { fprintf(stream, "%s", endMark); }
+}
+
+static void SwapNodes(struct List UNUSED *list,
                       struct ListNode *first,
-                      struct ListNode *second) {
-    // verifica daca nodurile se afla in lista
-    if (!ContainsNode(list, first)) { goto error; }
-    if (!ContainsNode(list, second)) { goto error; }
-    
-    // verifica daca vreunul din noduri este nod santinela
-    if (IsNodeHeadOrTail(first)) { goto error; }
-    if (IsNodeHeadOrTail(second)) { goto error; }
-    
-    // https://stackoverflow.com/a/27041055
-    
-    if (first == second) { return; }
-    
-    bool areNeighbors = AreNodesNeighbors(first, second);
-    
-    if (areNeighbors && (GetNodeNext(second) == first)) {
-        struct ListNode *temp = first;
-        first = second;
-        second = temp;
-    }
-    
-    struct ListNode *swapper[4];
-    
-    swapper[0] = GetNodePrev(first);
-    swapper[1] = GetNodePrev(second);
-    swapper[2] = GetNodeNext(first);
-    swapper[3] = GetNodeNext(second);
-    
-    if (areNeighbors) {
-        first->prev = swapper[2];
-        second->prev = swapper[0];
-        first->next = swapper[3];
-        second->next = swapper[1];
-    } else {
-        first->prev = swapper[1];
-        second->prev = swapper[0];
-        first->next = swapper[3];
-        second->next = swapper[2];
-    }
-    
-    first->prev->next = first;
-    first->next->prev = first;
-    
-    second->prev->next = second;
-    second->next->prev = second;
-    
-    return;
-    
-error:
-    return;
+                      struct ListNode *second)
+{
+	assert(list);
+	assert(first);
+	assert(second);
+	
+	// verifica daca nodurile se afla in lista
+	assert(ContainsNode(list, first));
+	assert(ContainsNode(list, second));
+	
+	// verifica daca vreunul din noduri este nod santinela
+	assert(!IsNodeHeadOrTail(first));
+	assert(!IsNodeHeadOrTail(second));
+	
+	// https://stackoverflow.com/a/27041055
+	
+	if (first == second) { return; }
+	
+	bool areNodesNeighbors = AreNodesNeighbors(first, second);
+	
+	if (areNodesNeighbors && (GetNodeNext(second) == first)) {
+		struct ListNode *temp = first;
+		first = second;
+		second = temp;
+	}
+	
+	struct ListNode *swapper[4];
+	swapper[0] = GetNodePrev(first);
+	swapper[1] = GetNodePrev(second);
+	swapper[2] = GetNodeNext(first);
+	swapper[3] = GetNodeNext(second);
+	
+	if (areNodesNeighbors) {
+		SetNodePrev(first, swapper[2]);
+		SetNodePrev(second, swapper[0]);
+		SetNodeNext(first, swapper[3]);
+		SetNodeNext(second, swapper[1]);
+	} else {
+		SetNodePrev(first, swapper[1]);
+		SetNodePrev(second, swapper[0]);
+		SetNodeNext(first, swapper[3]);
+		SetNodeNext(second, swapper[2]);
+	}
+	
+	SetNodeNext(GetNodePrev(first), first);
+	SetNodePrev(GetNodeNext(first), first);
+	
+	SetNodeNext(GetNodePrev(second), second);
+	SetNodePrev(GetNodeNext(second), second);
 }
 
-static void SwapData(struct List *list,
+static void SwapData(struct List UNUSED *list,
                      struct ListNode *first,
-                     struct ListNode *second) {
-    // verifica daca nodurile se afla in lista
-    if (!ContainsNode(list, first)) { goto error; }
-    if (!ContainsNode(list, second)) { goto error; }
-    
-    // verifica daca vreunul din noduri este nod santinela
-    if (IsNodeHeadOrTail(first)) { goto error; }
-    if (IsNodeHeadOrTail(second)) { goto error; }
-    
-    struct Data *temp = first->data;
-    first->data = second->data;
-    second->data = temp;
-    
-    return;
-    
-error:
-    return;
+                     struct ListNode *second)
+{
+	assert(list);
+	assert(first);
+	assert(second);
+	
+	// verifica daca nodurile se afla in lista
+	assert(ContainsNode(list, first));
+	assert(ContainsNode(list, second));
+	
+	// verifica daca vreunul din noduri este nod santinela
+	assert(!IsNodeHeadOrTail(first));
+	assert(!IsNodeHeadOrTail(second));
+	
+	struct Data *temp = GetNodeData(first);
+	SetNodeData(first, GetNodeData(second));
+	SetNodeData(second, temp);
 }
 
 static struct ListNode * Partition(struct List *list,
                                    struct ListNode *left,
                                    struct ListNode *right,
                                    struct ListNode *pivot,
-                                   List_comp_func_t comp_func) {
-    if (!list) { goto error; }
-    if (!left) { goto error; }
-    if (!right) { goto error; }
-    if (!pivot) { goto error; }
-    
-    // verifica daca nodurile se afla in lista
-    if (!ContainsNode(list, left)) { goto error; }
-    if (!ContainsNode(list, right)) { goto error; }
-    if (!ContainsNode(list, pivot)) { goto error; }
-    
-    // verifica daca vreunul din noduri este nod santinela
-    if (IsNodeHeadOrTail(left)) { goto error; }
-    if (IsNodeHeadOrTail(right)) { goto error; }
-    if (IsNodeHeadOrTail(pivot)) { goto error; }
-    
-    // verifica daca nodul pivot este vreun nod de delimitare
-    // sau daca se afla intre nodurile de delimitare
-    if (!((pivot == left) || (pivot == right)) &&
-        !IsNodeBounded(pivot, left, right)) { goto error; }
-    
-    // verifica daca cele doua noduri de delimitare
-    // nu sunt in ordinea potrivita
-    if (!IsNodePredecessor(left, right)) {
-        struct ListNode *temp = left;
-        left = right;
-        right = temp;
-    }
-    
-    // alegem pivotul ca fiind cel mai din dreapta element
-    // verifica daca pivotul nu este cel mai din dreapta element
-    if (pivot != right) {
-        // fa interschimbarea necesara pentru ca pivotul
-        // dat ca parametru sa fie cel mai din dreapta nod
-        SwapData(list, pivot, right);
-        
-        pivot = right;
-    }
-    
-    // incepe cu o un nod mai in inapoi, respectiv mai in inainte
-    struct ListNode *currLeft = GetNodePrev(left);
-    struct ListNode *currRight = right;
-    
-    while (true) {
-        // aici nu este nevoie sa verificam daca am ajuns
-        // la capatul din dreapta pentru ca sigur vom
-        // da peste pivot, lucru care ne va scoate din bucla
-        while (comp_func(GetNodeData(currLeft = GetNodeNext(currLeft)),
-                         GetNodeData(pivot)) < 0);
-        
-        while ((currRight != left) &&
-               (comp_func(GetNodeData(currRight = GetNodePrev(currRight)),
-                          GetNodeData(pivot)) > 0));
-        
-        // verifica daca cele doua directii s-au intersectat
-        if ((currLeft == currRight) ||
-            IsNodeAfter(currLeft, currRight)) { break; }
-        
-        SwapData(list, currLeft, currRight);
-    }
-    
-    SwapData(list, currLeft, right);
-    
-    return currLeft;
-    
-error:
-    return NULL;
+                                   Data_comp_func_t comp_func)
+{
+	assert(list);
+	assert(left);
+	assert(right);
+	assert(pivot);
+	assert(comp_func);
+	
+	// verifica daca nodurile se afla in lista
+	assert(ContainsNode(list, left));
+	assert(ContainsNode(list, right));
+	assert(ContainsNode(list, pivot));
+	
+	// verifica daca vreunul din noduri este nod santinela
+	assert(!IsNodeHeadOrTail(left));
+	assert(!IsNodeHeadOrTail(right));
+	assert(!IsNodeHeadOrTail(pivot));
+	
+	// verifica daca nodul pivot este vreun nod de delimitare
+	// sau daca se afla intre nodurile de delimitare
+	assert((pivot == left) || (pivot == right) || IsNodeBoundedBy(pivot, left, right));
+	
+	// verifica daca cele doua noduri de delimitare
+	// nu sunt in ordinea potrivita
+	if (!IsNodePredecessor(left, right)) {
+		struct ListNode *temp = left;
+		left = right;
+		right = temp;
+	}
+	
+	// alegem pivotul ca fiind cel mai din dreapta element
+	// verifica daca pivotul nu este cel mai din dreapta element
+	if (pivot != right) {
+		// fa interschimbarea necesara pentru ca pivotul
+		// dat ca parametru sa fie cel mai din dreapta nod
+		SwapData(list, pivot, right);
+		
+		pivot = right;
+	}
+	
+	// incepe cu o un nod mai in inapoi, respectiv mai in inainte
+	struct ListNode *currLeft = GetNodePrev(left);
+	struct ListNode *currRight = right;
+	
+	while (true) {
+		// aici nu este nevoie sa verificam daca am ajuns
+		// la capatul din dreapta pentru ca sigur vom
+		// da peste pivot, lucru care ne va scoate din bucla
+		while (comp_func(GetNodeData(currLeft = GetNodeNext(currLeft)),
+		                 GetNodeData(pivot)) < 0);
+		
+		while ((currRight != left) &&
+		       (comp_func(GetNodeData(currRight = GetNodePrev(currRight)),
+		                  GetNodeData(pivot)) > 0));
+		
+		// verifica daca cele doua directii s-au intersectat
+		if ((currLeft == currRight) ||
+			IsNodeAfter(currLeft, currRight)) { break; }
+		
+		SwapData(list, currLeft, currRight);
+	}
+	
+	SwapData(list, currLeft, right);
+	
+	return currLeft;
 }
 
 static void quick_sort(struct List *list,
                        struct ListNode *left,
                        struct ListNode *right,
-                       List_comp_func_t comp_func) {
-    if ((left == right) || IsNodeAfter(left, right)) { return; }
-    
-    struct ListNode *pivot = Partition(list, left, right, right, comp_func);
-    
-    quick_sort(list, left, GetNodePrev(pivot), comp_func);
-    // pivotul se afla pe pozitia potrivita
-    quick_sort(list, GetNodeNext(pivot), right, comp_func);
+                       Data_comp_func_t comp_func)
+{
+	assert(list);
+	assert(left);
+	assert(right);
+	assert(comp_func);
+	
+	if ((left == right) || IsNodeAfter(left, right)) { return; }
+	
+	struct ListNode *pivot = Partition(list, left, right, right, comp_func);
+	
+	quick_sort(list, left, GetNodePrev(pivot), comp_func);
+	// pivotul se afla pe pozitia potrivita
+	quick_sort(list, GetNodeNext(pivot), right, comp_func);
 }
 
 static void Sort(struct List *list,
                  struct ListNode *left,
                  struct ListNode *right,
-                 List_comp_func_t comp_func) {
-    if (!list) { goto error; }
-    if (!left) { goto error; }
-    if (!right) { goto error; }
-    
-    // verifica daca nodurile se afla in lista
-    if (!ContainsNode(list, left)) { goto error; }
-    if (!ContainsNode(list, right)) { goto error; }
-    
-    // verifica daca cele doua noduri de delimitare
-    // sunt in ordinea potrivita
-    if (!IsNodePredecessor(left, right)) {
-        struct ListNode *temp = left;
-        left = right;
-        right = temp;
-    }
-    
-    // foloseste algoritmul quicksort pentru sortarea listei
-    quick_sort(list, left, right, comp_func);
-    
-    return;
-    
-error:
-    return;
+                 Data_comp_func_t comp_func)
+{
+	assert(list);
+	assert(left);
+	assert(right);
+	assert(comp_func);
+	
+	// verifica daca nodurile se afla in lista
+	assert(ContainsNode(list, left));
+	assert(ContainsNode(list, right));
+	
+	// verifica daca cele doua noduri de delimitare
+	// sunt in ordinea potrivita
+	if (!IsNodePredecessor(left, right)) {
+		struct ListNode *temp = left;
+		left = right;
+		right = temp;
+	}
+	
+	// foloseste algoritmul quicksort pentru sortarea listei
+	quick_sort(list, left, right, comp_func);
 }
 
 static struct Data * RemoveNode(struct List *list,
                                 struct ListNode *node,
-                                bool pop) {
-    if (!list) { goto error; }
-    if (!node) { goto error; }
-    
-    if (!ContainsNode(list, node)) { goto error; }
-    
-    // verifica daca lista este goala
-    if (GetSize(list) == 0) { goto error; }
-    
-    // verifica daca se incearca eliminarea vreunui nod santinela
-    if (node == GetHeadNode(list)) { goto error; }
-    if (node == GetTailNode(list)) { goto error; }
-    
-    // inlatura nodul din lista
-    GetNodeNext(node)->prev = GetNodePrev(node);
-    GetNodePrev(node)->next = GetNodeNext(node);
-    
-    --(list->size); // scade numarul de noduri din lista
-    
-    node->list = NULL;
-    
-    struct Data *data = DestroyNode(node);
-    
-    // returneaza sau distruge datele ramase
-    return pop ? data : (Data_Destroy(data), NULL);
-    
-error:
-    return NULL;
+                                bool pop)
+{
+	assert(list);
+	assert(node);
+	
+	assert(ContainsNode(list, node));
+	
+	// verifica daca se incearca eliminarea vreunui nod santinela
+	assert(!IsNodeHeadOrTail(node));
+	
+	// inlatura nodul din lista
+	SetNodePrev(GetNodeNext(node), GetNodePrev(node));
+	SetNodeNext(GetNodePrev(node), GetNodeNext(node));
+	
+	SetSize(list, GetSize(list) - 1); // scade numarul de noduri din lista
+	
+	SetNodeNext(node, NULL);
+	SetNodePrev(node, NULL);
+	
+	SetNodeList(node, NULL);
+	
+	struct Data *data = DestroyNode(node);
+	
+	// returneaza sau distruge datele ramase
+	return pop ? data : (Data_Destroy(data), NULL);
 }
 
 static struct Data * RemoveFirstNode(struct List *list, bool pop) {
-    return RemoveNode(list, GetFirstNode(list), pop);
+	assert(list);
+	
+	return RemoveNode(list, GetFirstNode(list), pop);
 }
 
 static struct Data * RemoveLastNode(struct List *list, bool pop) {
-    return RemoveNode(list, GetLastNode(list), pop);
+	assert(list);
+	
+	return RemoveNode(list, GetLastNode(list), pop);
 }
 
 static struct Data * RemoveData(struct List *list,
                                 const struct Data *data,
-                                List_comp_func_t comp_func,
-                                bool pop) {
-    // cauta un nod care sa corespunda cu datele specificate
-    struct ListNode *node = ContainsData(list, data, comp_func);
-    
-    if (!node) { goto error; } // verifica daca nodul nu a fost gasit
-    
-    return RemoveNode(list, node, pop); // sterge nodul
-    
-error:
-    return NULL;
+                                Data_comp_func_t comp_func,
+                                bool pop)
+{
+	assert(list);
+	assert(data);
+	assert(comp_func);
+	
+	// cauta un nod care sa corespunda cu datele specificate
+	struct ListNode *node = ContainsData(list, data, comp_func);
+	
+	return node ? RemoveNode(list, node, pop) : NULL;
 }
 
 static void Clear(struct List *list) {
-    if (!list) { goto error; }
-    
-    if (GetSize(list) == 0) { return; }
-    
-    struct ListNode *curr = GetFirstNode(list);
-    
-    while (curr != GetTailNode(list)) {
-        struct ListNode *next = GetNodeNext(curr);
-        
-        RemoveNode(list, curr, false);
-        
-        curr = next;
-    }
-    
-    return;
-    
-error:
-    return;
+	assert(list);
+	
+	if (IsEmpty(list)) { return; }
+	
+	struct ListNode *curr = GetFirstNode(list);
+	
+	while (curr != GetTailNode(list)) {
+		struct ListNode *next = GetNodeNext(curr);
+		
+		RemoveNode(list, curr, false);
+		
+		curr = next;
+	}
 }
 
 static void Destroy(struct List *list) {
-    if (!list) { goto error; }
-    
-    // distruge toate nodurile listei (pentru eliberarea memoriei)
-    
-    Clear(list); // distruge nodurile din interiorul listei
-    
-    // distruge nodurile santinela
-    
-    struct ListNode *head = GetHeadNode(list);
-    struct ListNode *tail = GetTailNode(list);
-    
-    head->list = NULL;
-    tail->list = NULL;
-    
-    struct Data *data;
-    
-    data = DestroyNode(head);
-    if (data) { Data_Destroy(data); }
-    
-    data = DestroyNode(tail);
-    if (data) { Data_Destroy(data); }
-    
-    free(list); // elibereaza memoria ocupata de lista
-    
-    return;
-    
-error:
-    return;
+	assert(list);
+	
+	// distruge toate nodurile listei (pentru eliberarea memoriei)
+	
+	Clear(list); // distruge nodurile din interiorul listei
+	
+	// distruge nodurile santinela
+	
+	struct ListNode *head = GetHeadNode(list);
+	struct ListNode *tail = GetTailNode(list);
+	
+	SetNodeList(head, NULL);
+	SetNodeList(tail, NULL);
+	
+	struct Data *data;
+	
+	data = DestroyNode(head);
+	if (data) { Data_Destroy(data); }
+	
+	data = DestroyNode(tail);
+	if (data) { Data_Destroy(data); }
+	
+	free(list);
 }
 
 // PUBLIC
 
-struct List * List_Create() {
-    return Create();
-}
-
 struct Data * ListNode_GetData(const struct ListNode *node) {
-    return GetNodeData(node);
+	assert(node);
+	
+	return GetNodeData(node);
 }
 
 struct ListNode * ListNode_GetNext(const struct ListNode *node) {
-    const struct ListNode *next = GetNodeNext(node);
-    
-    // daca nodul precedent este nodul santinela de inceput,
-    // atunci nu il returna
-    if (!GetNodeNext(next)) { return NULL; }
-    
-    return (struct ListNode *)next;
+	assert(node);
+	
+	const struct ListNode *next = GetNodeNext(node);
+	
+	// daca nodul precedent este nodul santinela de inceput,
+	// atunci nu il returna
+	if (!GetNodeNext(next)) { return NULL; }
+	
+	return (struct ListNode *)next;
 }
 
 struct ListNode * ListNode_GetPrev(const struct ListNode *node) {
-    const struct ListNode *prev = GetNodePrev(node);
-    
-    // daca nodul precedent este nodul santinela de inceput,
-    // atunci nu il returna
-    if (!GetNodePrev(prev)) { return NULL; }
-    
-    return (struct ListNode *)prev;
+	assert(node);
+	
+	const struct ListNode *prev = GetNodePrev(node);
+	
+	// daca nodul precedent este nodul santinela de inceput,
+	// atunci nu il returna
+	if (!GetNodePrev(prev)) { return NULL; }
+	
+	return (struct ListNode *)prev;
+}
+
+struct ListNode * ListNode_Data_Unwrap(const struct Data *data) {
+	assert(data);
+	
+	return Node_Data_Unwrap(data);
 }
 
 size_t List_GetSize(const struct List *list) {
-    return GetSize(list);
+	assert(list);
+	
+	return GetSize(list);
+}
+
+struct List * List_Create() {
+	return Create();
 }
 
 bool List_IsEmpty(const struct List *list) {
-    return IsEmpty(list);
-}
-
-bool ListNode_IsHeadOrTail(const struct ListNode *node) {
-    return IsNodeHeadOrTail(node);
+	assert(list);
+	
+	return IsEmpty(list);
 }
 
 bool ListNode_IsAfter(const struct ListNode *node,
-                      const struct ListNode *ref) {
-    return IsNodeAfter(node, ref);
+                      const struct ListNode *ref)
+{
+	assert(node);
+	assert(ref);
+	
+	return IsNodeAfter(node, ref);
 }
 
 bool ListNode_IsBefore(const struct ListNode *node,
-                       const struct ListNode *ref) {
-    return IsNodeBefore(node, ref);
+                       const struct ListNode *ref)
+{
+	assert(node);
+	assert(ref);
+	
+	return IsNodeBefore(node, ref);
 }
 
 bool ListNode_IsBetween(const struct ListNode *node,
                         const struct ListNode *left,
-                        const struct ListNode *right) {
-    return IsNodeBetween(node, left, right);
+                        const struct ListNode *right)
+{
+	assert(node);
+	assert(left);
+	assert(right);
+	
+	return IsNodeBetween(node, left, right);
 }
 
 bool ListNode_IsSuccessor(const struct ListNode *node,
-                          const struct ListNode *ref) {
-    return IsNodeSuccessor(node, ref);
+                          const struct ListNode *ref)
+{
+	assert(node);
+	assert(ref);
+	
+	return IsNodeSuccessor(node, ref);
 }
 
 bool ListNode_IsPredecessor(const struct ListNode *node,
-                            const struct ListNode *ref) {
-    return IsNodePredecessor(node, ref);
+                            const struct ListNode *ref)
+{
+	assert(node);
+	assert(ref);
+	
+	return IsNodePredecessor(node, ref);
 }
 
-bool ListNode_IsBounded(const struct ListNode *node,
-                        const struct ListNode *left,
-                        const struct ListNode *right) {
-    return IsNodeBounded(node, left, right);
+bool ListNode_IsBoundedBy(const struct ListNode *node,
+                          const struct ListNode *left,
+                          const struct ListNode *right)
+{
+	assert(node);
+	assert(left);
+	assert(right);
+	
+	return IsNodeBoundedBy(node, left, right);
 }
 
-bool ListNode_AreNeighbors(const struct ListNode *left,
-                           const struct ListNode *right) {
-    return AreNodesNeighbors(left, right);
+bool ListNode_IsNeighborWith(const struct ListNode *node,
+                             const struct ListNode *other)
+{
+	assert(node);
+	assert(other);
+	
+	return AreNodesNeighbors(node, other);
 }
 
 struct ListNode * List_GetFirstNode(const struct List *list) {
-    // daca lista nu are niciun element nu returna
-    // nodul santinela de sfarsit al listei
-    // ce este returnat de functia privata
-    return GetSize(list) > 0 ? GetFirstNode(list) : NULL;
+	assert(list);
+	
+	// daca lista nu are niciun element nu returna
+	// nodul santinela de sfarsit al listei
+	// ce este returnat de functia privata
+	return !IsEmpty(list) ? GetFirstNode(list) : NULL;
 }
 
 struct ListNode * List_GetLastNode(const struct List *list) {
-    // daca lista nu are niciun element nu returna
-    // nodul santinela de inceput al listei
-    // ce este returnat de functia privata
-    return GetSize(list) > 0 ? GetLastNode(list) : NULL;
+	assert(list);
+	
+	// daca lista nu are niciun element nu returna
+	// nodul santinela de inceput al listei
+	// ce este returnat de functia privata
+	return !IsEmpty(list) ? GetLastNode(list) : NULL;
 }
 
 bool List_ContainsNode(const struct List *list,
-                       const struct ListNode *node) {
-    bool containsNode = ContainsNode(list, node);
-    
-    if (!containsNode) { return false; }
-    
-    // nu lua in considerare nodurile santinela
-    if (node == GetHeadNode(list)) { return false; }
-    if (node == GetTailNode(list)) { return false; }
-    
-    return true;
+                       const struct ListNode *node)
+{
+	assert(list);
+	assert(node);
+	
+	bool containsNode = ContainsNode(list, node);
+	
+	if (!containsNode) { return false; }
+	
+	// nu lua in considerare nodurile santinela
+	if (node == GetHeadNode(list)) { return false; }
+	if (node == GetTailNode(list)) { return false; }
+	
+	return true;
 }
 
 struct ListNode * List_ContainsData(const struct List *list,
                                     const struct Data *data,
-                                    List_comp_func_t comp_func) {
-    return ContainsData(list, data, comp_func);
+                                    Data_comp_func_t comp_func)
+{
+	assert(list);
+	assert(data);
+	assert(comp_func);
+	
+	return ContainsData(list, data, comp_func);
 }
 
 struct ListNode * List_GetNodesMiddle(const struct List *list,
                                       const struct ListNode *left,
-                                      const struct ListNode *right) {
-    return GetNodesMiddle(list, left, right);
+                                      const struct ListNode *right)
+{
+	assert(list);
+	assert(left);
+	assert(right);
+	
+	return GetNodesMiddle(list, left, right);
 }
 
 struct ListNode * List_GetMiddleNode(const struct List *list) {
-    // daca lista nu are niciun element nu returna
-    // nodul santinela de inceput al listei
-    // ce este returnat de functia privata
-    return GetSize(list) > 0 ? GetMiddleNode(list) : NULL;
+	assert(list);
+	
+	// daca lista nu are niciun element nu returna
+	// nodul santinela de inceput al listei
+	// ce este returnat de functia privata
+	return !IsEmpty(list) ? GetMiddleNode(list) : NULL;
 }
 
-void List_GetSpanNode(const struct List *list,
-                      const struct ListNode *start,
-                      size_t span,
-                      bool forward,
-                      struct ListNode **out_end,
-                      size_t *out_span) {
-    GetSpanNode(list,
-                start,
-                span,
-                forward,
-                out_end,
-                out_span);
+void ListNode_GetSpanNode(const struct ListNode *start,
+                          size_t span,
+                          bool forward,
+                          struct ListNode **out_end,
+                          size_t *out_span)
+{
+	assert(start);
+	assert(out_end);
+	
+	GetNodeSpanNode(start,
+	                span,
+	                forward,
+	                out_end,
+	                out_span);
 }
 
-void List_GetRadiusNodes(const struct List *list,
-                         const struct ListNode *center,
-                         size_t radius,
-                         struct ListNode **out_left,
-                         struct ListNode **out_right,
-                         size_t *out_leftRadius,
-                         size_t *out_rightRadius) {
-    GetRadiusNodes(list,
-                   center,
-                   radius,
-                   out_left,
-                   out_right,
-                   out_leftRadius,
-                   out_rightRadius);
+void ListNode_GetRadiusNodes(const struct ListNode *center,
+                             size_t radius,
+                             struct ListNode **out_left,
+                             struct ListNode **out_right,
+                             size_t *out_leftRadius,
+                             size_t *out_rightRadius)
+{
+	assert(center);
+	assert(out_left);
+	assert(out_right);
+	
+	GetNodeRadiusNodes(center,
+	                   radius,
+	                   out_left,
+	                   out_right,
+	                   out_leftRadius,
+	                   out_rightRadius);
 }
 
-struct ListNode * List_AddNodeBetween(struct List *list,
-                                      const struct ListNode *node,
-                                      struct ListNode *left,
-                                      struct ListNode *right) {
-    // nu insera direct nodul primit ca parametru, ci o copie a acestuia
-    struct ListNode *copy = CopyNode(node);
-    
-    return AddNodeBetween(list, copy, left, right);
+struct ListNode * List_AddNodeCopyBetween(struct List *list,
+                                          const struct ListNode *node,
+                                          struct ListNode *left,
+                                          struct ListNode *right)
+{
+	assert(list);
+	assert(node);
+	assert(left);
+	assert(right);
+	
+	// nu insera direct nodul primit ca parametru, ci o copie a acestuia
+	struct ListNode *copy = CopyNode(node);
+	
+	return AddNodeBetween(list, copy, left, right);
 }
 
-struct ListNode * List_AddNodeAfter(struct List *list,
-                                    const struct ListNode *node,
-                                    struct ListNode *ref) {
-    // nu insera direct nodul primit ca parametru, ci o copie a acestuia
-    struct ListNode *copy = CopyNode(node);
-    
-    return AddNodeAfter(list, copy, ref);
+struct ListNode * List_AddNodeCopyAfter(struct List *list,
+                                        const struct ListNode *node,
+                                        struct ListNode *ref)
+{
+	assert(list);
+	assert(node);
+	assert(ref);
+	
+	// nu insera direct nodul primit ca parametru, ci o copie a acestuia
+	struct ListNode *copy = CopyNode(node);
+	
+	return AddNodeAfter(list, copy, ref);
 }
 
-struct ListNode * List_AddNodeBefore(struct List *list,
-                                     const struct ListNode *node,
-                                     struct ListNode *ref) {
-    // nu insera direct nodul primit ca parametru, ci o copie a acestuia
-    struct ListNode *copy = CopyNode(node);
-    
-    return AddNodeBefore(list, copy, ref);
+struct ListNode * List_AddNodeCopyBefore(struct List *list,
+                                         const struct ListNode *node,
+                                         struct ListNode *ref)
+{
+	assert(list);
+	assert(node);
+	assert(ref);
+	
+	// nu insera direct nodul primit ca parametru, ci o copie a acestuia
+	struct ListNode *copy = CopyNode(node);
+	
+	return AddNodeBefore(list, copy, ref);
 }
 
-struct ListNode * List_AddNodeFirst(struct List *list,
-                                    const struct ListNode *node) {
-    // nu insera direct nodul primit ca parametru, ci o copie a acestuia
-    struct ListNode *copy = CopyNode(node);
-    
-    return AddNodeFirst(list, copy);
+struct ListNode * List_AddNodeCopyFirst(struct List *list,
+                                        const struct ListNode *node)
+{
+	assert(list);
+	assert(node);
+	
+	// nu insera direct nodul primit ca parametru, ci o copie a acestuia
+	struct ListNode *copy = CopyNode(node);
+	
+	return AddNodeFirst(list, copy);
 }
 
-struct ListNode * List_AddNodeLast(struct List *list,
-                                   const struct ListNode *node) {
-    // nu insera direct nodul primit ca parametru, ci o copie a acestuia
-    struct ListNode *copy = CopyNode(node);
-    
-    return AddNodeLast(list, copy);
+struct ListNode * List_AddNodeCopyLast(struct List *list,
+                                       const struct ListNode *node)
+{
+	assert(list);
+	assert(node);
+	
+	// nu insera direct nodul primit ca parametru, ci o copie a acestuia
+	struct ListNode *copy = CopyNode(node);
+	
+	return AddNodeLast(list, copy);
 }
 
 struct ListNode * List_AddDataBetween(struct List *list,
                                       const struct Data *data,
                                       struct ListNode *left,
-                                      struct ListNode *right) {
-    return AddDataBetween(list, data, left, right);
+                                      struct ListNode *right)
+{
+	assert(list);
+	assert(data);
+	assert(left);
+	assert(right);
+	
+	return AddDataBetween(list, data, left, right);
 }
 
 struct ListNode * List_AddDataAfter(struct List *list,
                                     const struct Data *data,
-                                    struct ListNode *ref) {
-    return AddDataAfter(list, data, ref);
+                                    struct ListNode *ref)
+{
+	assert(list);
+	assert(data);
+	assert(ref);
+	
+	return AddDataAfter(list, data, ref);
 }
 
 struct ListNode * List_AddDataBefore(struct List *list,
                                      const struct Data *data,
-                                     struct ListNode *ref) {
-    return AddDataBefore(list, data, ref);
+                                     struct ListNode *ref)
+{
+	assert(list);
+	assert(data);
+	assert(ref);
+	
+	return AddDataBefore(list, data, ref);
 }
 
 struct ListNode * List_AddDataFirst(struct List *list,
-                                    const struct Data *data) {
-    return AddDataFirst(list, data);
+                                    const struct Data *data)
+{
+	assert(list);
+	assert(data);
+	
+	return AddDataFirst(list, data);
 }
 
 struct ListNode * List_AddDataLast(struct List *list,
-                                   const struct Data *data) {
-    return AddDataLast(list, data);
+                                   const struct Data *data)
+{
+	assert(list);
+	assert(data);
+	
+	return AddDataLast(list, data);
 }
 
 struct List * List_Copy(const struct List *list) {
-    return Copy(list);
+	assert(list);
+	
+	return Copy(list);
 }
 
-struct List * List_CreateSubNodes(const struct List *list,
+struct List * List_CreateSubFromNodes(const struct List *list,
                                   const struct ListNode *left,
-                                  const struct ListNode *right) {
-    return CreateSubNodes(list, left, right);
+                                  const struct ListNode *right)
+{
+	assert(list);
+	assert(left);
+	assert(right);
+	
+	return CreateSubFromNodes(list, left, right);
 }
 
-struct List * List_CreateSubSpan(const struct List *list,
-                                        const struct ListNode *start,
-                                        size_t span,
-                                        bool forward) {
-    return CreateSubSpan(list, start, span, forward);
+struct List * List_CreateSubFromSpan(const struct List *list,
+                                     const struct ListNode *start,
+                                     size_t span,
+                                     bool forward)
+{
+	assert(list);
+	assert(start);
+	
+	return CreateSubFromSpan(list, start, span, forward);
 }
 
-struct List * List_CreateSubRadius(const struct List *list,
-                                   const struct ListNode *center,
-                                   size_t radius) {
-    return CreateSubRadius(list, center, radius);
+struct List * List_CreateSubFromRadius(const struct List *list,
+                                       const struct ListNode *center,
+                                       size_t radius)
+{
+	assert(list);
+	assert(center);
+	
+	return CreateSubFromRadius(list, center, radius);
 }
 
-void List_Print(const struct List *list, List_print_func_t print_func) {
-    Print(list, print_func);
+void List_Process(struct List *list,
+                  Data_proc_func_t proc_func)
+{
+	assert(list);
+	assert(proc_func);
+	
+	Process(list, proc_func);
+}
+
+void List_Print(const struct List *list,
+                Data_print_func_t print_func,
+                const char *delim,
+                const char *endMark,
+                FILE *stream)
+{
+	assert(list);
+	assert(print_func);
+	assert(stream);
+	
+	Print(list, print_func, delim, endMark, stream);
 }
 
 void List_SwapNodes(struct List *list,
                     struct ListNode *first,
-                    struct ListNode *second) {
-    SwapNodes(list, first, second);
+                    struct ListNode *second)
+{
+	assert(list);
+	assert(first);
+	assert(second);
+	
+	SwapNodes(list, first, second);
 }
 
 struct ListNode * List_Partition(struct List *list,
                                  struct ListNode *left,
                                  struct ListNode *right,
                                  struct ListNode *pivot,
-                                 List_comp_func_t comp_func) {
-    if (GetSize(list) == 0) { return NULL; }
-    
-    return Partition(list, left, right, pivot, comp_func);
+                                 Data_comp_func_t comp_func)
+{
+	assert(list);
+	assert(left);
+	assert(right);
+	assert(pivot);
+	assert(comp_func);
+	
+	return Partition(list, left, right, pivot, comp_func);
 }
 
-void List_Sort(struct List *list, List_comp_func_t comp_func) {
-    if (GetSize(list) == 0) { return; }
-    
-    Sort(list, GetFirstNode(list), GetLastNode(list), comp_func);
+void List_Sort(struct List *list, Data_comp_func_t comp_func) {
+	assert(list);
+	assert(comp_func);
+	
+	Sort(list, GetFirstNode(list), GetLastNode(list), comp_func);
 }
 
 struct Data * List_RemoveNode(struct List *list,
                               struct ListNode *node,
-                              bool pop) {
-    return RemoveNode(list, node, pop);
+                              bool pop)
+{
+	assert(list);
+	assert(node);
+	
+	return RemoveNode(list, node, pop);
 }
 
 struct Data * List_RemoveFirstNode(struct List *list, bool pop) {
-    return RemoveFirstNode(list, pop);
+	assert(list);
+	
+	return RemoveFirstNode(list, pop);
 }
 
 struct Data * List_RemoveLastNode(struct List *list, bool pop) {
-    return RemoveLastNode(list, pop);
+	assert(list);
+	
+	return RemoveLastNode(list, pop);
 }
 
 struct Data * List_RemoveData(struct List *list,
                               const struct Data *data,
-                              List_comp_func_t comp_func,
-                              bool pop) {
-    return RemoveData(list, data, comp_func, pop);
+                              Data_comp_func_t comp_func,
+                              bool pop)
+{
+	assert(list);
+	assert(data);
+	assert(comp_func);
+	
+	return RemoveData(list, data, comp_func, pop);
 }
 
 void List_Clear(struct List *list) {
-    Clear(list);
+	assert(list);
+	
+	Clear(list);
 }
 
 void List_Destroy(struct List *list) {
-    Destroy(list);
+	assert(list);
+	
+	Destroy(list);
 }

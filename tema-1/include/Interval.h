@@ -3,18 +3,20 @@
 
 #include "Data.h"
 
-#include <stddef.h>
+#include <stdio.h>
 
 struct Interval {
-    double start;
-    double end;
-    
-    size_t pointCount;
+	double start;
+	double end;
+	
+	size_t pointCount;
 };
 
-int Interval_List_comp_func(const struct Data *first,
-                            const struct Data *second);
+struct Interval * Interval_Data_Unwrap(const struct Data *data);
 
-void Interval_List_print_func(const struct Data *data);
+int Interval_Data_comp_func_start(const struct Data *first,
+                                  const struct Data *second);
+
+void Interval_Data_print_func(const struct Data *data, FILE *stream);
 
 #endif // INTERVAL_H

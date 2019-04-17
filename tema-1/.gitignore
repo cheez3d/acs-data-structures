@@ -1,4 +1,6 @@
 obj/
 tema1
 
+checker/tests/outputs/
+
 vmchecker.zip

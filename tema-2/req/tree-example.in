@@ -1,0 +1,7 @@
+6
+0 -1 5 addr1 addr2 addr3 addr4 addr6
+1 0 1 addr1
+2 0 1 addr2
+3 0 1 addr3
+4 1 1 addr4
+5 1 2 addr5 addr6

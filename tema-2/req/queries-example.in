@@ -1,0 +1,9 @@
+8
+q 0 addr2
+q 0 addr1
+q 0 addr1
+q 1 addr4
+q 1 addr1
+q 1 addr2
+f 4
+q 1 addr4

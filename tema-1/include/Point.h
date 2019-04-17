@@ -3,14 +3,19 @@
 
 #include "Data.h"
 
+#include <stdio.h>
+
 struct Point {
-    unsigned timestamp;
-    double value;
+	unsigned timestamp;
+	
+	double value;
 };
 
-int Point_List_comp_func(const struct Data *first,
-                         const struct Data *second);
+struct Point * Point_Data_Unwrap(const struct Data *data);
 
-void Point_List_print_func(const struct Data *data);
+int Point_Data_comp_func_value(const struct Data *first,
+                               const struct Data *second);
+
+void Point_Data_print_func(const struct Data *data, FILE *stream);
 
 #endif // POINT_H
