@@ -7,7 +7,7 @@
 #include <error.h>
 #include <stdio.h>
 #include <stdlib.h>
-
+// TODO: remove TREE_ and also from other files
 static const char *TREE_IN_FILE_NAME = "tree.in";
 
 static const char *TREE_OUT_FILE_NAME = "tree.out";

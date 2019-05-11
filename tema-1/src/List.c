@@ -1,8 +1,8 @@
 #include "List.h"
 
-#include "helpers.h"
-
 #include "Data.h"
+
+#include "helpers.h"
 
 #include <stdarg.h>
 #include <stdbool.h>

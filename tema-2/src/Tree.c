@@ -1,9 +1,9 @@
 #include "Tree.h"
 
-#include "helpers.h"
-
 #include "Data.h"
 #include "List.h"
+
+#include "helpers.h"
 
 #include <stdbool.h>
 #include <stdlib.h>
@@ -32,8 +32,7 @@ static struct Data * GetNodeData(const struct TreeNode *node) {
 	return node->data;
 }
 
-static struct List * GetNodeChildren(const struct TreeNode *node)
-{
+static struct List * GetNodeChildren(const struct TreeNode *node) {
 	assert(node);
 	
 	return node->children;
@@ -584,6 +583,8 @@ static void Clear(struct Tree *tree) {
 	}
 	
 	List_Destroy(nodes);
+	
+	// SetRoot(tree, NULL); // TODO: check if needed
 }
 
 static void Destroy(struct Tree *tree) {
@@ -592,8 +593,6 @@ static void Destroy(struct Tree *tree) {
 	// distruge toate nodurile arborelui
 	// (pentru eliberarea memoriei)
 	Clear(tree);
-	
-	SetRoot(tree, NULL);
 	
 	free(tree);
 }

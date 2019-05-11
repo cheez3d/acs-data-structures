@@ -26,13 +26,6 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c Makefile
 
 build: $(BIN)
 
-.PHONY: run
-run: build
-	@./$(BIN)
-
-valgrind: build
-	@valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(BIN)
-
 .PHONY: clean
 clean:
 	@-rm -f $(OBJ) $(DEP) $(BIN)

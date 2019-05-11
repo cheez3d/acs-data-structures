@@ -113,7 +113,7 @@ void process_queries(struct Tree *tree, struct List *users) {
 	
 	for (size_t i = 0; i < queryCount; ++i) {
 		char query;
-		
+		// TODO: add more info to errors
 		if (fscanf(fin, "\n%c", &query) != 1) {
 			error(EXIT_FAILURE, errno,
 			      "%s: Could not read query",
@@ -121,7 +121,7 @@ void process_queries(struct Tree *tree, struct List *users) {
 		}
 		
 		switch (query) {
-			case 'q': {
+			case 'q':
 				size_t userId;
 				
 				if (fscanf(fin, "%zu", &userId) != 1) {
@@ -203,9 +203,8 @@ void process_queries(struct Tree *tree, struct List *users) {
 				free(address);
 				
 				break;
-			}
 			
-			case 'f': {
+			case 'f':
 				size_t serverId;
 				
 				if (fscanf(fin, "%zu", &serverId) != 1) {
@@ -261,13 +260,11 @@ void process_queries(struct Tree *tree, struct List *users) {
 				Data_Destroy(serverWrapper);
 				
 				break;
-			}
 			
-			default: {
+			default:
 				error(EXIT_FAILURE, errno,
 				      "%s: Unknown query '%c'",
 				      QUERIES_IN_FILE_NAME, query);
-			}
 		}
 	}
 	

@@ -100,17 +100,22 @@ struct List * process_switches(int argc, const char *argv[]) {
 		List_AddDataLast(taskList, &taskWrapper);
 		
 		switch (task) {
-			case OUTLIER_REMOVAL: { break; }
+			case OUTLIER_REMOVAL:
+				break;
 			
-			case NOISE_REMOVAL_MEDIAN: { break; }
+			case NOISE_REMOVAL_MEDIAN:
+				break;
 			
-			case NOISE_REMOVAL_ARITHMETIC_MEAN: { break; }
+			case NOISE_REMOVAL_ARITHMETIC_MEAN:
+				break;
 			
-			case TIME_LEVELLING: { break; }
+			case TIME_LEVELLING:
+				break;
 			
-			case DATA_FILLING: { break; }
+			case DATA_FILLING:
+				break;
 			
-			case STATISTICS: {
+			case STATISTICS:
 				skippedChars += strlen(SWITCHES[STATISTICS]);
 				
 				unsigned delta;
@@ -128,11 +133,9 @@ struct List * process_switches(int argc, const char *argv[]) {
 				List_AddDataLast(taskList, &deltaWrapper);
 				
 				break;
-			}
 			
-			default: {
+			default:
 				error(EXIT_FAILURE, errno, "Unknown task '%d'", task);
-			}
 		}
 	}
 	
@@ -182,42 +185,37 @@ int main(int argc, const char *argv[]) {
 		enum Task task = **(enum Task **)taskWrapper;
 		
 		switch (task) {
-			case OUTLIER_REMOVAL: {
+			case OUTLIER_REMOVAL:
 				outputList =
 					outlier_removal(outputList, &outputList_print_func);
 				
 				break;
-			}
 			
-			case NOISE_REMOVAL_MEDIAN: {
+			case NOISE_REMOVAL_MEDIAN:
 				outputList =
 					noise_removal_median(outputList, &outputList_print_func);
 				
 				break;
-			}
 			
-			case NOISE_REMOVAL_ARITHMETIC_MEAN: {
+			case NOISE_REMOVAL_ARITHMETIC_MEAN:
 				outputList =
 					noise_removal_arithmetic_mean(outputList,
 					                              &outputList_print_func);
 				
 				break;
-			}
 			
-			case TIME_LEVELLING: {
+			case TIME_LEVELLING:
 				outputList =
 					time_levelling(outputList, &outputList_print_func);
 				
 				break;
-			}
 			
-			case DATA_FILLING: {
+			case DATA_FILLING:
 				outputList = data_filling(outputList, &outputList_print_func);
 				
 				break;
-			}
 			
-			case STATISTICS: {
+			case STATISTICS:
 				struct Data *deltaWrapper =
 					List_RemoveFirstNode(taskList, true);
 				
@@ -230,11 +228,9 @@ int main(int argc, const char *argv[]) {
 				Data_Destroy(deltaWrapper);
 				
 				break;
-			}
 			
-			default: {
+			default:
 				error(EXIT_FAILURE, errno, "Unknown task '%d'", task);
-			}
 		}
 		
 		if (prevOutputList != outputList) {
