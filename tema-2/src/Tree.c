@@ -66,11 +66,14 @@ static void SetNodeParent(struct TreeNode *node,
 
 static void SetNodeTree(struct TreeNode *node, const struct Tree *tree) {
 	assert(node);
+	// tree poate fi si NULL
 	
 	node->tree = (struct Tree *)tree;
 }
 
 static struct TreeNode * CreateNode(const struct Data *data) {
+	// data poate fi si NULL
+	
 	struct TreeNode *node = malloc(sizeof *node);
 	
 	SetNodeData(node, data ? Data_Copy(data) : NULL);
@@ -126,6 +129,7 @@ static struct TreeNode * GetRoot(const struct Tree *tree) {
 
 static void SetRoot(struct Tree *tree, struct TreeNode *root) {
 	assert(tree);
+	// root poate fi si NULL
 	
 	tree->root = root;
 }
@@ -278,6 +282,7 @@ static struct TreeNode * AddNode(struct Tree *tree,
 {
 	assert(tree);
 	assert(node);
+	// parent poate fi si NULL
 	
 	if (!parent) { // daca inseram primul nod in arbore
 		assert(IsEmpty(tree)); // verifica sa nu mai exista deja o radacina
@@ -307,6 +312,7 @@ static struct TreeNode * AddData(struct Tree *tree,
 {
 	assert(tree);
 	assert(data);
+	// parent poate fi si NULL
 	
 	return AddNode(tree, CreateNode(data), parent);
 }
@@ -359,6 +365,8 @@ static void Print(const struct Tree *tree,
 {
 	assert(tree);
 	assert(print_func);
+	// delim poate fi si NULL
+	// endMark poate fi si NULL
 	assert(stream);
 	
 	if (IsEmpty(tree)) { return; }
@@ -401,7 +409,7 @@ static void Print(const struct Tree *tree,
 	
 	List_Destroy(nodeQueue);
 }
-
+// TODO: add size field to Tree struct and change IsEmpty condition
 static void PrintWithChildren(const struct Tree *tree,
                               Data_print_func_t print_func,
                               const char *delimChildren,
@@ -528,6 +536,8 @@ static struct Data * RemoveNode(struct Tree *tree,
 	return pop ? data : (Data_Destroy(data), NULL);
 }
 
+// TODO: add RemoveData function, and also add it to Graph
+
 static void Clear(struct Tree *tree) {
 	assert(tree);
 	
@@ -590,8 +600,7 @@ static void Clear(struct Tree *tree) {
 static void Destroy(struct Tree *tree) {
 	assert(tree);
 	
-	// distruge toate nodurile arborelui
-	// (pentru eliberarea memoriei)
+	// distruge toate nodurile arborelui (pentru eliberarea memoriei)
 	Clear(tree);
 	
 	free(tree);

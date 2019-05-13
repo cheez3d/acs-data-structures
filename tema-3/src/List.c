@@ -1,5 +1,6 @@
 #include "List.h"
 
+#include "BSTree.h"
 #include "Data.h"
 
 #include "helpers.h"
@@ -9,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <assert.h>
 
 // PRIVATE
@@ -723,6 +724,24 @@ static struct ListNode * AddDataLast(struct List *list,
 	return AddDataBefore(list, data, GetTailNode(list));
 }
 
+static struct List * Copy(const struct List *list) {
+	assert(list);
+	
+	struct List *copy = Create();
+	
+	const struct ListNode *curr = GetFirstNode(list);
+	
+	while (curr != GetTailNode(list)) {
+		struct ListNode *nodeCopy = CopyNode(curr);
+		
+		AddNodeLast(copy, nodeCopy);
+		
+		curr = GetNodeNext(curr);
+	}
+	
+	return copy;
+}
+
 static struct List * CreateSubFromNodes(const struct List UNUSED *list,
                                         const struct ListNode *left,
                                         const struct ListNode *right)
@@ -758,24 +777,6 @@ static struct List * CreateSubFromNodes(const struct List UNUSED *list,
 	return sub;
 }
 
-static struct List * Copy(const struct List *list) {
-	assert(list);
-	
-	struct List *copy = Create();
-	
-	const struct ListNode *curr = GetFirstNode(list);
-	
-	while (curr != GetTailNode(list)) {
-		struct ListNode *nodeCopy = CopyNode(curr);
-		
-		AddNodeLast(copy, nodeCopy);
-		
-		curr = GetNodeNext(curr);
-	}
-	
-	return copy;
-}
-
 static struct List * CreateSubFromSpan(const struct List *list,
                                        const struct ListNode *start,
                                        size_t span,
@@ -806,6 +807,22 @@ static struct List * CreateSubFromRadius(const struct List *list,
 	GetNodeRadiusNodes(center, radius, &left, &right, NULL, NULL);
 	
 	return CreateSubFromNodes(list, left, right);;
+}
+
+static struct List * CreateFromBSTree(const struct BSTree *tree) {
+	assert(tree);
+	
+	struct List *list = Create();
+	
+	struct BSTreeNode *treeNode = BSTreeNode_GetFirstIn(BSTree_GetRoot(tree));
+	
+	while (treeNode) {
+		AddDataLast(list, BSTreeNode_GetData(treeNode));
+		
+		treeNode = BSTreeNode_GetInSuccessor(treeNode);
+	}
+	
+	return list;
 }
 
 static void Process(struct List *list, Data_proc_func_t proc_func) {
@@ -899,9 +916,9 @@ static void SwapNodes(struct List UNUSED *list,
 	SetNodePrev(GetNodeNext(second), second);
 }
 
-static void SwapData(struct List UNUSED *list,
-                     struct ListNode *first,
-                     struct ListNode *second)
+static void SwapNodesData(struct List UNUSED *list,
+                          struct ListNode *first,
+                          struct ListNode *second)
 {
 	assert(list);
 	assert(first);
@@ -959,7 +976,7 @@ static struct ListNode * Partition(struct List *list,
 	if (pivot != right) {
 		// fa interschimbarea necesara pentru ca pivotul
 		// dat ca parametru sa fie cel mai din dreapta nod
-		SwapData(list, pivot, right);
+		SwapNodesData(list, pivot, right);
 		
 		pivot = right;
 	}
@@ -983,18 +1000,18 @@ static struct ListNode * Partition(struct List *list,
 		if ((currLeft == currRight) ||
 			IsNodeAfter(currLeft, currRight)) { break; }
 		
-		SwapData(list, currLeft, currRight);
+		SwapNodesData(list, currLeft, currRight);
 	}
 	
-	SwapData(list, currLeft, right);
+	SwapNodesData(list, currLeft, right);
 	
 	return currLeft;
 }
 
-static void quick_sort(struct List *list,
-                       struct ListNode *left,
-                       struct ListNode *right,
-                       Data_comp_func_t comp_func)
+static void Sort_quickSort(struct List *list,
+                           struct ListNode *left,
+                           struct ListNode *right,
+                           Data_comp_func_t comp_func)
 {
 	assert(list);
 	assert(left);
@@ -1005,9 +1022,9 @@ static void quick_sort(struct List *list,
 	
 	struct ListNode *pivot = Partition(list, left, right, right, comp_func);
 	
-	quick_sort(list, left, GetNodePrev(pivot), comp_func);
+	Sort_quickSort(list, left, GetNodePrev(pivot), comp_func);
 	// pivotul se afla pe pozitia potrivita
-	quick_sort(list, GetNodeNext(pivot), right, comp_func);
+	Sort_quickSort(list, GetNodeNext(pivot), right, comp_func);
 }
 
 static void Sort(struct List *list,
@@ -1033,7 +1050,7 @@ static void Sort(struct List *list,
 	}
 	
 	// foloseste algoritmul quicksort pentru sortarea listei
-	quick_sort(list, left, right, comp_func);
+	Sort_quickSort(list, left, right, comp_func);
 }
 
 static struct Data * RemoveNode(struct List *list,
@@ -1556,6 +1573,12 @@ struct List * List_CreateSubFromRadius(const struct List *list,
 	assert(center);
 	
 	return CreateSubFromRadius(list, center, radius);
+}
+
+struct List * List_CreateFromBSTree(const struct BSTree *tree) {
+	assert(tree);
+	
+	return CreateFromBSTree(tree);
 }
 
 void List_Process(struct List *list, Data_proc_func_t proc_func) {

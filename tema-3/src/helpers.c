@@ -4,10 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <assert.h>
 
-#define LINE_BUFFER_LENGTH 128 // TODO: also use #define in Tema 1 Task 4
+#define LINE_BUFFER_LENGTH 128
 
 static_assert(LINE_BUFFER_LENGTH > 1,
               "LINE_BUFFER_LENGTH must be greater than 1");

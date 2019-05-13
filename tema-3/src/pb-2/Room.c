@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <assert.h>
 
 // PRIVATE
@@ -38,7 +38,6 @@ static struct Room * Create(size_t id,
 	
 	room->isExit = isExit;
 	
-	// TODO: OPT: check afterwards if sort is needed
 	qsort(guardTimes,
 	      guardTimeCount,
 	      sizeof *guardTimes,

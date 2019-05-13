@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// #define NDEBUG
+#include "helpers.h"
+
+#define NDEBUG
 #include <assert.h>
 
 // PRIVATE
@@ -18,9 +20,6 @@ struct Heap {
 	size_t capacity;
 	
 	struct Data **container;
-	
-	Data_comp_func_t comp_func;
-	Data_update_func_t update_func;
 	
 	bool min;
 };
@@ -49,18 +48,6 @@ static struct Data ** GetContainer(const struct Heap *heap) {
 	return heap->container;
 }
 
-static Data_comp_func_t Get_comp_func(const struct Heap *heap) {
-	assert(heap);
-	
-	return heap->comp_func;
-}
-
-static Data_update_func_t Get_update_func(const struct Heap *heap) {
-	assert(heap);
-	
-	return heap->update_func;
-}
-
 static bool IsMin(const struct Heap *heap) {
 	assert(heap);
 	
@@ -79,22 +66,6 @@ static void SetCapacity(struct Heap *heap, size_t capacity) {
 	assert(capacity >= GetSize(heap));
 	
 	heap->capacity = capacity;
-}
-
-static void Set_comp_func(struct Heap *heap, Data_comp_func_t comp_func) {
-	assert(heap);
-	assert(comp_func);
-	
-	heap->comp_func = comp_func;
-}
-
-static void Set_update_func(struct Heap *heap,
-                            Data_update_func_t update_func)
-{
-	assert(heap);
-	assert(update_func);
-	
-	heap->update_func = update_func;
 }
 
 static void SetMin(struct Heap *heap, bool min) {
@@ -120,12 +91,12 @@ static void AdjustCapacity(struct Heap *heap,
 	SetCapacity(heap, capacity);
 }
 
-static struct Heap * Create(Data_comp_func_t comp_func,
-                            Data_update_func_t update_func,
+static struct Heap * Create(// Data_comp_func_t comp_func,
+                            // Data_update_func_t update_func,
                             bool min)
 {
-	assert(comp_func);
-	assert(update_func);
+	// assert(comp_func);
+	// assert(update_func);
 	
 	assert(MIN_CAPACITY >= 2);
 	
@@ -137,20 +108,20 @@ static struct Heap * Create(Data_comp_func_t comp_func,
 	heap->container = NULL;
 	AdjustCapacity(heap, MIN_CAPACITY);
 	
-	Set_comp_func(heap, comp_func);
-	Set_update_func(heap, update_func);
+	// Set_comp_func(heap, comp_func);
+	// Set_update_func(heap, update_func);
 	
 	SetMin(heap, min);
 	
 	return heap;
 }
 
-static void Update(struct Heap *heap, size_t i) {
+static void Update(struct Heap *heap, size_t i, Data_comp_func_t comp_func) {
 	assert(heap);
+	assert(comp_func);
 	
 	assert(i < GetSize(heap));
 	
-	Data_comp_func_t comp_func = Get_comp_func(heap);
 	int ref = IsMin(heap) ? -1 : 1;
 	
 	struct Data **container = GetContainer(heap);
@@ -178,7 +149,7 @@ static void Update(struct Heap *heap, size_t i) {
 	container[i] = container[candidate_i];
 	container[candidate_i] = temp;
 	
-	Update(heap, candidate_i);
+	Update(heap, candidate_i, comp_func);
 }
 
 static bool IsEmpty(const struct Heap *heap) {
@@ -214,9 +185,39 @@ static size_t ContainsData(const struct Heap *heap,
 	return GetSize(heap);
 }
 
-static size_t AddData(struct Heap *heap, const struct Data *data) {
+static size_t MoveDataUp(const struct Heap *heap,
+                         size_t i,
+                         Data_comp_func_t comp_func)
+{
+	assert(heap);
+	assert(i < GetSize(heap));
+	assert(comp_func);
+	
+	struct Data **container = GetContainer(heap);
+	
+	size_t parent_i = index_parent(i);
+	
+	int ref = IsMin(heap) ? -1 : 1;
+	
+	while (i > 0 && comp_func(container[i], container[parent_i]) == ref) {
+		struct Data *temp = container[i];
+		container[i] = container[parent_i];
+		container[parent_i] = temp;
+		
+		i = parent_i;
+		parent_i = index_parent(i);
+	}
+	
+	return i;
+}
+
+static size_t AddData(struct Heap *heap,
+                      const struct Data *data,
+                      Data_comp_func_t comp_func)
+{
 	assert(heap);
 	assert(data);
+	assert(comp_func);
 	
 	if (GetCapacity(heap) == GetSize(heap)) {
 		AdjustCapacity(heap, 2 * GetCapacity(heap));
@@ -231,67 +232,41 @@ static size_t AddData(struct Heap *heap, const struct Data *data) {
 	
 	container[i] = Data_Copy(data);
 	
-	// filtreaza in sus elementul
-	
-	size_t parent_i = index_parent(i);
-	
-	Data_comp_func_t comp_func = Get_comp_func(heap);
-	int ref = IsMin(heap) ? -1 : 1;
-	
-	while (i > 0 && comp_func(container[i], container[parent_i]) == ref) {
-		struct Data *temp = container[i];
-		container[i] = container[parent_i];
-		container[parent_i] = temp;
-		
-		i = parent_i;
-		parent_i = index_parent(i);
-	}
-	
-	return i;
+	return MoveDataUp(heap, i, comp_func);
 }
 
 static size_t AdjustDataPriority(struct Heap *heap,
-                                 struct Data *data,
-                                 const struct Data *new)
+                                 size_t i,
+                                 const struct Data *new,
+                                 Data_comp_func_t comp_func,
+                                 Data_update_func_t update_func)
 {
 	assert(heap);
-	assert(data);
+	assert(i < GetSize(heap)); // verifica daca datele se afla in heap
+	                           // (ContainsData returneaza GetSize(heap)
+	                           //  cand nu gaseste datele specificate in heap)
 	assert(new);
+	assert(comp_func);
+	assert(update_func);
 	
-	Data_comp_func_t comp_func = Get_comp_func(heap);
-	int ref = IsMin(heap) ? -1 : 1;
+	int UNUSED ref = IsMin(heap) ? -1 : 1;
 	
-	struct Data **container = GetContainer(heap);
+	struct Data *data = GetContainer(heap)[i];
 	
-	size_t i = ContainsData(heap, data, comp_func);
-	
-	// verifica daca datele se afla in heap
-	assert(i < GetSize(heap));
-	
+	// prioritatea poate fi actualizata doar astfel incat elementul
+	// sa ajunga pe o pozitie mai aproape de inceput
 	assert(comp_func(new, data) == ref);
-	
-	Data_update_func_t update_func = Get_update_func(heap);
 	
 	update_func(data, new); // actualizeaza prioritatea
 	
-	// filtreaza in sus elementul
-	
-	size_t parent_i = index_parent(i);
-	
-	while (i > 0 && comp_func(container[i], container[parent_i]) == ref) {
-		struct Data *temp = container[i];
-		container[i] = container[parent_i];
-		container[parent_i] = temp;
-		
-		i = parent_i;
-		parent_i = index_parent(i);
-	}
-	
-	return i;
+	return MoveDataUp(heap, i, comp_func);
 }
 
-static struct Data *RemoveFirstData(struct Heap *heap) {
+static struct Data *RemoveFirstData(struct Heap *heap,
+                                    Data_comp_func_t comp_func)
+{
 	assert(heap);
+	assert(comp_func);
 	
 	if (IsEmpty(heap)) { return NULL; }
 	
@@ -321,7 +296,7 @@ static struct Data *RemoveFirstData(struct Heap *heap) {
 		AdjustCapacity(heap, GetCapacity(heap) / 2);
 	}
 	
-	Update(heap, 0);
+	Update(heap, 0, comp_func);
 	
 	return first;
 }
@@ -448,14 +423,8 @@ struct Data ** Heap_GetContainer(const struct Heap *heap) {
 	return GetContainer(heap);
 }
 
-struct Heap * Heap_Create(Data_comp_func_t comp_func,
-                          Data_update_func_t update_func,
-                          bool min)
-{
-	assert(comp_func);
-	assert(update_func);
-	
-	return Create(comp_func, update_func, min);
+struct Heap * Heap_Create(bool min) {
+	return Create(min);
 }
 
 bool Heap_IsEmpty(const struct Heap *heap) {
@@ -481,28 +450,50 @@ size_t Heap_ContainsData(const struct Heap *heap,
 	return ContainsData(heap, data, comp_func);
 }
 
-size_t Heap_AddData(struct Heap *heap, const struct Data *data) {
+size_t Heap_MoveDataUp(const struct Heap *heap,
+                       size_t i,
+                       Data_comp_func_t comp_func)
+{
 	assert(heap);
-	assert(data);
+	assert(i < GetSize(heap));
+	assert(comp_func);
 	
-	return AddData(heap, data);
+	return MoveDataUp(heap, i, comp_func);
 }
 
-size_t Heap_AdjustDataPriority(struct Heap *heap,
-                               struct Data *data,
-                               const struct Data *new)
+size_t Heap_AddData(struct Heap *heap,
+                    const struct Data *data,
+                    Data_comp_func_t comp_func)
 {
 	assert(heap);
 	assert(data);
-	assert(new);
+	assert(comp_func);
 	
-	return AdjustDataPriority(heap, data, new);
+	return AddData(heap, data, comp_func);
 }
 
-struct Data *Heap_RemoveFirstData(struct Heap *heap) {
+size_t Heap_AdjustDataPriority(struct Heap *heap,
+                               size_t i,
+                               const struct Data *new,
+                               Data_comp_func_t comp_func,
+                               Data_update_func_t update_func)
+{
 	assert(heap);
+	assert(i < GetSize(heap));
+	assert(new);
+	assert(comp_func);
+	assert(update_func);
 	
-	return RemoveFirstData(heap);
+	return AdjustDataPriority(heap, i, new, comp_func, update_func);
+}
+
+struct Data *Heap_RemoveFirstData(struct Heap *heap,
+                                  Data_comp_func_t comp_func)
+{
+	assert(heap);
+	assert(comp_func);
+	
+	return RemoveFirstData(heap, comp_func);
 }
 
 void Heap_Process(struct Heap *heap, Data_proc_func_t proc_func) {

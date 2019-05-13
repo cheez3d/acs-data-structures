@@ -17,9 +17,7 @@ size_t Heap_GetSize(const struct Heap *heap);
 
 struct Data ** Heap_GetContainer(const struct Heap *heap);
 
-struct Heap * Heap_Create(Data_comp_func_t comp_func,
-                          Data_update_func_t,
-                          bool min);
+struct Heap * Heap_Create(bool min);
 
 bool Heap_IsEmpty(const struct Heap *heap);
 
@@ -29,13 +27,22 @@ size_t Heap_ContainsData(const struct Heap *heap,
                          const struct Data *data,
                          Data_comp_func_t comp_func);
 
-size_t Heap_AddData(struct Heap *heap, const struct Data *data);
+size_t Heap_MoveDataUp(const struct Heap *heap,
+                       size_t i,
+                       Data_comp_func_t comp_func);
+
+size_t Heap_AddData(struct Heap *heap,
+                    const struct Data *data,
+                    Data_comp_func_t comp_func);
 
 size_t Heap_AdjustDataPriority(struct Heap *heap,
-                               struct Data *data,
-                               const struct Data *new);
+                               size_t i,
+                               const struct Data *new,
+                               Data_comp_func_t comp_func,
+                               Data_update_func_t update_func);
 
-struct Data *Heap_RemoveFirstData(struct Heap *heap);
+struct Data *Heap_RemoveFirstData(struct Heap *heap,
+                                  Data_comp_func_t comp_func);
 
 void Heap_Process(struct Heap *heap, Data_proc_func_t proc_func);
 

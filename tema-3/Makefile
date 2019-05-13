@@ -1,15 +1,15 @@
 CC := gcc
-CFLAGS := -std=c11 -Wall -Wextra -g -Og
-# CFLAGS := -std=c11 -Wall -Wextra -O2 -flto
+# CFLAGS := -std=c11 -Wall -Wextra -g
+CFLAGS := -std=c11 -Wall -Wextra -O2 -flto
 
-CFLAGS_1 := -std=gnu11 -Wall -Wextra -g -Og
-# CFLAGS_1 := -std=gnu11 -Wall -Wextra -O2 -flto
-LDFLAGS_1 := -Wall -Wextra -Og
-# LDFLAGS_1 := -Wall -Wextra -O2 -flto
+# CFLAGS_1 := -std=gnu11 -Wall -Wextra -g
+CFLAGS_1 := -std=gnu11 -Wall -Wextra -O2 -flto
+# LDFLAGS_1 := -Wall -Wextra
+LDFLAGS_1 := -Wall -Wextra -O2 -flto
 LDLIBS_1 := 
 
-CFLAGS_2 := -std=c11 -Wall -Wextra -g -Og
-# CFLAGS_2 := -std=c11 -Wall -Wextra -O2 -flto
+# CFLAGS_2 := -std=c11 -Wall -Wextra -g
+CFLAGS_2 := -std=c11 -Wall -Wextra -O2 -flto
 LDFLAGS_2 := $(LDFLAGS_1)
 LDLIBS_2 := 
 

@@ -2,7 +2,7 @@
 #define ROOM_H
 
 #include <stdbool.h>
-#include <stddef.h>
+#include <stdio.h>
 
 struct Room {
 	size_t id;

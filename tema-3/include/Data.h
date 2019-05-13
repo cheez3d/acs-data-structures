@@ -12,7 +12,7 @@ typedef int (*Data_comp_func_t)(const struct Data *first,
                                 const struct Data *second);
 
 typedef void (*Data_proc_func_t)(struct Data *data);
-// TODO: copy Data.h Data.c in tema-1 tema-2
+
 typedef void (*Data_update_func_t)(struct Data *data, const struct Data *ref);
 
 typedef void (*Data_print_func_t)(const struct Data *data, FILE *stream);

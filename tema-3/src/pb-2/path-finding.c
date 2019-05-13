@@ -6,7 +6,7 @@
 
 #include <limits.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <assert.h>
 
 enum Metadata {
@@ -46,26 +46,6 @@ static int GraphNode_time_comp_func(const struct GraphNode *first,
 	return time_comp_func(firstTime, secondTime);
 }
 
-static void GraphNode_time_update_func(struct GraphNode *node,
-                                       const struct GraphNode *new)
-{
-	assert(node);
-	
-	struct List *metadata = GraphNode_GetMetadata(node);
-	
-	struct Data *timeWrapper =
-		ListNode_GetData(List_GetNodeAtIndex(metadata, TIME));
-	
-	metadata = GraphNode_GetMetadata(new);
-	
-	struct Data *newTimeWrapper =
-		ListNode_GetData(List_GetNodeAtIndex(metadata, TIME));
-	
-	unsigned newTime = **(unsigned **)newTimeWrapper;
-	
-	**(unsigned **)timeWrapper = newTime;
-}
-
 static int GraphNode_Data_time_comp_func(const struct Data *first,
                                          const struct Data *second)
 {
@@ -76,25 +56,13 @@ static int GraphNode_Data_time_comp_func(const struct Data *first,
 	                                GraphNode_Data_Unwrap(second));
 }
 
-static void GraphNode_Data_time_update_func(struct Data *data,
-                                            const struct Data *new)
-{
-	assert(data);
-	
-	GraphNode_time_update_func(GraphNode_Data_Unwrap(data),
-	                           GraphNode_Data_Unwrap(new));
-}
-
 void path_finding(struct Graph *graph,
                   struct GraphNode *startingRoomNode,
                   size_t exitCount,
                   struct List *out_path,
                   unsigned *out_time)
 {
-	struct Heap *priorityQueue =
-		Heap_Create(GraphNode_Data_time_comp_func,
-		            GraphNode_Data_time_update_func,
-		            true);
+	struct Heap *priorityQueue = Heap_Create(true);
 	
 	// initializeaza toate datele necesare algoritmului
 	
@@ -141,7 +109,9 @@ void path_finding(struct Graph *graph,
 			}
 			
 			// adauga nodul de inceput in coada cu prioritati
-			Heap_AddData(priorityQueue, nodeWrapper);
+			Heap_AddData(priorityQueue,
+			             nodeWrapper,
+			             GraphNode_Data_time_comp_func);
 			
 			// marcheaza nodul ca fiind vizitat
 			
@@ -170,13 +140,12 @@ void path_finding(struct Graph *graph,
 		listNode = ListNode_GetNext(listNode);
 	}
 	
-	struct Heap *exitRoomNodeHeap =
-		Heap_Create(GraphNode_Data_time_comp_func,
-		            GraphNode_Data_time_update_func,
-		            true);
+	struct Heap *exitRoomNodeHeap = Heap_Create(true);
 	
 	while (!Heap_IsEmpty(priorityQueue)) {
-		struct Data *minTimeNodeWrapper = Heap_RemoveFirstData(priorityQueue);
+		struct Data *minTimeNodeWrapper =
+			Heap_RemoveFirstData(priorityQueue,
+			                     GraphNode_Data_time_comp_func);
 		
 		struct GraphNode *minTimeNode =
 			GraphNode_Data_Unwrap(minTimeNodeWrapper);
@@ -198,7 +167,9 @@ void path_finding(struct Graph *graph,
 		struct Room *room = Room_Data_Unwrap(roomWrapper);
 		
 		if (Room_IsExit(room)) {
-			Heap_AddData(exitRoomNodeHeap, minTimeNodeWrapper);
+			Heap_AddData(exitRoomNodeHeap,
+			             minTimeNodeWrapper,
+			             GraphNode_Data_time_comp_func);
 		}
 		
 		Data_Destroy(minTimeNodeWrapper);
@@ -229,6 +200,7 @@ void path_finding(struct Graph *graph,
 			
 			bool isNeighborDone = **(bool **)isNeighborDoneWrapper;
 			
+			// daca vecinul nu se mai afla in coada cu prioritati
 			if (isNeighborDone) { goto skip_neighbor_node; }
 			
 			// extrage ponderea legaturii intre cele 2 noduri
@@ -271,7 +243,9 @@ void path_finding(struct Graph *graph,
 				if (!isNeighborVisited) {
 					// daca nodul nu e inca in coada
 					// adauga nodul camerei vecine in coada cu prioritati
-					Heap_AddData(priorityQueue, neighborWrapper);
+					Heap_AddData(priorityQueue,
+					             neighborWrapper,
+					             GraphNode_Data_time_comp_func);
 					
 					// marcheaza nodul camerei vecine ca fiind vizitat
 					// pentru a nu-l mai adauga din nou in coada
@@ -279,28 +253,13 @@ void path_finding(struct Graph *graph,
 				} else {
 					// actualizeaza timpul in coada cu prioritati
 					
-					Data_comp_func_t comp_func = GraphNode_Data_time_comp_func;
-					
-					// filtreaza in sus nodul in coada
-					
 					size_t i = Heap_ContainsData(priorityQueue,
 					                             neighborWrapper,
 					                             GraphNode_Data_comp_func);
 					
-					struct Data **container = Heap_GetContainer(priorityQueue);
-					
-					size_t parent_i = Heap_index_parent(i);
-					
-					while (i > 0 &&
-					       comp_func(container[i], container[parent_i]) == -1)
-					{
-						struct Data *temp = container[i];
-						container[i] = container[parent_i];
-						container[parent_i] = temp;
-						
-						i = parent_i;
-						parent_i = Heap_index_parent(i);
-					}
+					Heap_MoveDataUp(priorityQueue,
+					                i,
+					                GraphNode_Data_time_comp_func);
 				}
 				
 				struct Data *neighborPrevWrapper =

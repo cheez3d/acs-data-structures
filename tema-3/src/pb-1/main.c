@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <assert.h>
 
 enum Task {
@@ -74,6 +74,8 @@ size_t task2(struct Graph *graph,
              struct GraphNode *second);
 
 struct List * task3(struct Graph *graph);
+
+struct List * bonus(struct Graph *graph);
 
 int main(int argc, const char *argv[]) {
 	if (argc - 1 != 3) {
@@ -161,7 +163,8 @@ int main(int argc, const char *argv[]) {
 			
 			Movie_AddActor(movie, actor);
 			
-			// OPT: Actor_AddMovie(actor, movie);
+			// OPTIMIZATION: Actor_AddMovie(actor, movie);
+			// (in tema nu este nevoie sa setezi filmele in care au jucat actorii)
 		}
 		
 		free(movieName);
@@ -170,7 +173,7 @@ int main(int argc, const char *argv[]) {
 	struct Graph *graph = Graph_Create(false);
 	
 	graph_construction(graph, movieList);
-	// TOREMOVE: printf("nc=%zu\n", List_GetSize(Graph_GetNodes(graph)));
+	
 	FILE *fout = fopen(outFileName, "w");
 	
 	if (!fout) {
@@ -219,17 +222,7 @@ int main(int argc, const char *argv[]) {
 				      "%s: Actor with name '%s' does not exist",
 				      inFileName, firstActorName);
 			}
-			// TOREMOVE:
-			// printf("%zu\n", List_GetSize(GraphNode_GetNeighbors(firstActorNode)));
-			// struct ListNode *p = List_GetFirstNode(GraphNode_GetNeighbors(firstActorNode));
-			// while (p) {
-				// struct GraphNode *n = GraphNode_Data_Unwrap(ListNode_GetData(p));
-				
-				// Actor_Data_print_func_name(GraphNode_GetData(n), stdout);
-				// printf("\n");
-				
-				// p = ListNode_GetNext(p);
-			// }
+			
 			struct GraphNode *secondActorNode =
 				Graph_ContainsData(graph,
 				                   &refSecondActorWrapper,
@@ -240,17 +233,7 @@ int main(int argc, const char *argv[]) {
 				      "%s: Actor with name '%s' does not exist",
 				      inFileName, secondActorName);
 			}
-			// TOREMOVE:
-			// printf("\n%zu\n", List_GetSize(GraphNode_GetNeighbors(secondActorNode)));
-			// p = List_GetFirstNode(GraphNode_GetNeighbors(secondActorNode));
-			// while (p) {
-				// struct GraphNode *n = GraphNode_Data_Unwrap(ListNode_GetData(p));
-				
-				// Actor_Data_print_func_name(GraphNode_GetData(n), stdout);
-				// printf("\n");
-				
-				// p = ListNode_GetNext(p);
-			// }
+			
 			free(firstActorName);
 			free(secondActorName);
 			
@@ -276,10 +259,20 @@ int main(int argc, const char *argv[]) {
 			break;
 		}
 		
-		case BONUS:
+		case BONUS: {
+			struct List *maxActorClique = bonus(graph);
 			
+			fprintf(fout, "%zu\n", List_GetSize(maxActorClique));
+			
+			List_Print(maxActorClique,
+			           Actor_Data_print_func_name,
+			           "\n", "\n",
+			           fout);
+			
+			List_Destroy(maxActorClique);
 			
 			break;
+		}
 		
 		default:
 			error(EXIT_FAILURE, errno, "Unknown task '%d'", task);

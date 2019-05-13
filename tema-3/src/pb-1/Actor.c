@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <assert.h>
 
 // PRIVATE

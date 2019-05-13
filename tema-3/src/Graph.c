@@ -8,7 +8,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <assert.h>
 
 // PRIVATE
@@ -294,7 +294,7 @@ static void AddLink(struct Graph *graph,
 	AddOrientedLink(graph, second, first);
 }
 
-static void AddWeightedOrientedLink(struct Graph *graph,
+static void AddWeightedOrientedLink(struct Graph UNUSED *graph,
                                     struct GraphNode *src,
                                     struct GraphNode *dest,
                                     unsigned weight)
@@ -358,8 +358,6 @@ static void AddWeightedLink(struct Graph *graph,
 	AddWeightedOrientedLink(graph, first, second, weight);
 	AddWeightedOrientedLink(graph, second, first, weight);
 }
-
-// TODO: maybe add RemoveLink functions
 
 static size_t GetConnectedComponentCount(struct Graph *graph) {
 	assert(graph);

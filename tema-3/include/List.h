@@ -1,11 +1,13 @@
 #ifndef LIST_H
-#define LIST_H // TODO: copy List.h List.c back in tema-1, tema-2
-// TODO: also check switch statements in tema-1, tema-2
+#define LIST_H
 
+#include "BSTree.h"
 #include "Data.h"
 
 #include <stdbool.h>
 #include <stdio.h>
+
+struct BSTree;
 
 struct ListNode;
 struct List;
@@ -145,6 +147,8 @@ struct List * List_CreateSubFromSpan(const struct List *list,
 struct List * List_CreateSubFromRadius(const struct List *list,
                                        const struct ListNode *center,
                                        size_t radius);
+
+struct List * List_CreateFromBSTree(const struct BSTree *tree);
 
 void List_Process(struct List *list,
                   Data_proc_func_t proc_func);

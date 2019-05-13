@@ -52,7 +52,6 @@ void graph_construction(struct Graph *graph,
 				GraphNode_Data_Unwrap(actorNodeWrapper);
 			
 			struct ListNode *otherActorNodeListNode =
-				// OPT: List_GetFirstNode(actorNodeList);
 				ListNode_GetNext(actorNodeListNode);
 			
 			while (otherActorNodeListNode) {
