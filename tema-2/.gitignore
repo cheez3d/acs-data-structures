@@ -1,4 +1,11 @@
-obj/
-tema2
+/.debug
+/tema2
+/vmchecker.zip
 
-vmchecker.zip
+/.vscode/settings.json
+
+/hierarchy.out
+/queries.out
+/tree.out
+
+/obj/

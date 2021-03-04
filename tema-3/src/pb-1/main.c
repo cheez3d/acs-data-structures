@@ -14,6 +14,61 @@
 #define NDEBUG
 #include <assert.h>
 
+// POSSIBLE REFACTORINGS
+// - maybe add RemoveLink functions for Graph
+// - in Graph function AddWeightedOrientedLink
+// - in loc de a seta ponderea la minimum adauga o functie pentru actualizarea unei ponderi
+// - add print_end_mark label to Print functions in all data structures to print end mark even if data structure is empty
+// - when constructing actor graph remove Actor_comp_func
+// - bron_kerbosch: if (BSTreeNode_GetRight(nodeTreeNode)) { printf("reached right\n"); }
+// - copy Data.h Data.c in tema-1 tema-2
+// - copy List.h List.c back in tema-1, tema-2
+// - also check switch statements in tema-1, tema-2
+/*
+void i_Data_print_func(const struct Data *data, FILE *stream) {
+	assert(data);
+	assert(stream);
+	
+	fprintf(stream, "%zu", **(size_t **)data);
+}
+
+int i_Data_comp_func(const struct Data *f, const struct Data *s) {
+	assert(f);
+	assert(s);
+	
+	size_t fi = **(size_t **)f;
+	size_t si = **(size_t **)s;
+	
+	if (fi < si) return -1;
+	if (fi > si) return 1;
+	
+	return 0;
+}
+
+struct BSTree *tr = BSTree_Create();
+
+BSTree_AddData(tr, &(struct Data){ &(size_t){ 7 }, sizeof(size_t) }, i_Data_comp_func);
+BSTree_AddData(tr, &(struct Data){ &(size_t){ 3 }, sizeof(size_t) }, i_Data_comp_func);
+BSTree_AddData(tr, &(struct Data){ &(size_t){ 5 }, sizeof(size_t) }, i_Data_comp_func);
+BSTree_AddData(tr, &(struct Data){ &(size_t){ 10 }, sizeof(size_t) }, i_Data_comp_func);
+BSTree_AddData(tr, &(struct Data){ &(size_t){ 8 }, sizeof(size_t) }, i_Data_comp_func);
+BSTree_AddData(tr, &(struct Data){ &(size_t){ 1 }, sizeof(size_t) }, i_Data_comp_func);
+BSTree_AddData(tr, &(struct Data){ &(size_t){ 4 }, sizeof(size_t) }, i_Data_comp_func);
+BSTree_AddData(tr, &(struct Data){ &(size_t){ 6 }, sizeof(size_t) }, i_Data_comp_func);
+
+BSTree_PrintWithChildren(tr, i_Data_print_func, "\t", "\n", "\n\n", stdout);
+
+struct BSTreeNode *tn = BSTreeNode_GetSubMin(BSTree_GetRoot(tr));
+
+while (tn) {
+	i_Data_print_func(BSTreeNode_GetData(tn), stdout);
+	printf(" ");
+	
+	tn = BSTreeNode_GetPostSuccessor(tn);
+}
+printf("\n");
+*/
+
 enum Task {
 	TASK1, // determinarea numarului de productii independente
 	

@@ -1,14 +1,10 @@
 CC := gcc
-# CFLAGS := -std=c11 -Wall -Wextra -g
 CFLAGS := -std=c11 -Wall -Wextra -O2 -flto
 
-# CFLAGS_1 := -std=gnu11 -Wall -Wextra -g
 CFLAGS_1 := -std=gnu11 -Wall -Wextra -O2 -flto
-# LDFLAGS_1 := -Wall -Wextra
 LDFLAGS_1 := -Wall -Wextra -O2 -flto
 LDLIBS_1 := 
 
-# CFLAGS_2 := -std=c11 -Wall -Wextra -g
 CFLAGS_2 := -std=c11 -Wall -Wextra -O2 -flto
 LDFLAGS_2 := $(LDFLAGS_1)
 LDLIBS_2 := 
@@ -64,14 +60,7 @@ $(OBJ_DIR)/$(SRC_DIR_1)/%.o: $(SRC_DIR)/$(SRC_DIR_1)/%.c Makefile
 $(OBJ_DIR)/$(SRC_DIR_2)/%.o: $(SRC_DIR)/$(SRC_DIR_2)/%.c Makefile
 	$(CC) -iquote $(INC_DIR) -iquote $(INC_DIR)/$(SRC_DIR_2) -MMD -c $(CFLAGS_2) $< -o $@
 
-build1: $(BIN_1)
-
-build2: $(BIN_2)
-
-build: build1 build2
-
-valgrind2: build2
-	valgrind --tool=memcheck --leak-check=full --show-leak-kinds=all --track-origins=yes ./$(BIN_2)
+build:  $(BIN_1) $(BIN_2)
 
 .PHONY: clean
 clean:

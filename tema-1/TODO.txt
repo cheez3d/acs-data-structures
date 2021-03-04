@@ -1,1 +1,0 @@
-// TODO: also use #define in Tema 1 Task 4

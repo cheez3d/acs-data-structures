@@ -1,6 +1,9 @@
-obj/
-tema1
+/.debug
+/tema1
+/vmchecker.zip
 
-checker/tests/outputs/
+/.vscode/settings.json
 
-vmchecker.zip
+/checker/tests/outputs/
+
+/obj/

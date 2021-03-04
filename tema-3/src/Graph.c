@@ -18,9 +18,6 @@ struct GraphNode {
 	
 	struct List *neighbors;
 	
-	bool flag;
-	struct GraphNode *prev;
-	
 	struct List *metadata;
 	
 	struct Graph *graph;
@@ -544,8 +541,8 @@ static struct Data * RemoveNode(struct Graph *graph,
 			if (IsWeighted(graph)) {
 				// sterge ponderea legaturii
 				List_RemoveNode(neighborNeighbors,
-								ListNode_GetNext(listNode),
-								false);
+				                ListNode_GetNext(listNode),
+				                false);
 			}
 			
 			// sterge legatura propriu-zisa a vecinului

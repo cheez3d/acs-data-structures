@@ -9,9 +9,9 @@ enum Metadata {
 	PARENT,
 };
 
-void dfs(struct GraphNode *node,
-         unsigned *time,
-         struct List *out_bridgeNodeList)
+void tarjan(struct GraphNode *node,
+            unsigned *time,
+            struct List *out_bridgeNodeList)
 {
 	size_t childCount = 0;
 	
@@ -77,7 +77,7 @@ void dfs(struct GraphNode *node,
 			
 			**(struct GraphNode ***)neighborParentWrapper = node;
 			
-			dfs(neighbor, time, out_bridgeNodeList);
+			tarjan(neighbor, time, out_bridgeNodeList);
 			
 			struct Data *neighborLowTimeWrapper =
 				ListNode_GetData(List_GetNodeAtIndex(neighborMetadata,
@@ -100,7 +100,7 @@ void dfs(struct GraphNode *node,
 				
 				List_AddDataLast(out_bridgeNodeList, &nodeWrapper);
 			}
-		} else if (!parent || (GraphNode_comp_func(neighbor, parent) != 0)) {
+		} else if (!parent || GraphNode_comp_func(neighbor, parent) != 0) {
 			**(unsigned **)lowTimeWrapper = lowTime < neighborDiscoveryTime ?
 			                                lowTime :
 			                                neighborDiscoveryTime;
@@ -179,7 +179,7 @@ struct List * task3(struct Graph *graph) {
 		
 		if (isVisited) { goto skip_node; }
 		
-		dfs(node, &time, bridgeNodeList);
+		tarjan(node, &time, bridgeNodeList);
 		
 	skip_node:
 		listNode = ListNode_GetNext(listNode);

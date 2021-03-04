@@ -9,6 +9,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+// POSSIBLE REFACTORINGS
+// - also use #define in Tema 1 Task 4
+
 enum Task {
 	OUTLIER_REMOVAL, // eliminare de exceptii folosind statistici
 	

@@ -1,5 +1,8 @@
-obj/
-labirint
-movies
+/.debug
+/labirint
+/movies
+/vmchecker.zip
 
-vmchecker.zip
+/.vscode/settings.json
+
+/obj/
